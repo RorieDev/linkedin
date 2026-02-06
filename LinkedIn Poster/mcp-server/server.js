@@ -6,8 +6,18 @@ import { OpenAI } from 'openai';
 import https from 'https';
 import http from 'http';
 import cron from 'node-cron';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+if (!supabase) {
+  console.warn('⚠️  Supabase not configured - using in-memory storage (not persistent)');
+}
 
 const app = express();
 app.use(cors());
@@ -27,11 +37,138 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   console.warn('Missing LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET / LINKEDIN_REDIRECT_URI in env');
 }
 
-// In-memory token store for demo purposes
-const tokens = { };
+// Load tokens from Supabase or initialize empty
+async function loadTokens() {
+  if (!supabase) return {};
+  try {
+    const { data, error } = await supabase
+      .from('tokens')
+      .select('member_id, access_token, expires_at');
 
-// In-memory scheduled posts store
-const scheduledPosts = {};
+    if (error) throw error;
+
+    const tokens = {};
+    if (data) {
+      data.forEach(row => {
+        tokens[row.member_id] = {
+          access_token: row.access_token,
+          expires_at: row.expires_at
+        };
+      });
+    }
+    return tokens;
+  } catch (err) {
+    console.error('Error loading tokens from Supabase:', err.message);
+    return {};
+  }
+}
+
+// Save token to Supabase
+async function saveToken(memberId, token) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('tokens')
+      .upsert({
+        member_id: memberId,
+        access_token: token.access_token,
+        expires_at: token.expires_at
+      }, { onConflict: 'member_id' });
+
+    if (error) throw error;
+  } catch (err) {
+    console.error('Error saving token to Supabase:', err.message);
+  }
+}
+
+// Load scheduled posts from Supabase or initialize empty
+async function loadScheduledPosts() {
+  if (!supabase) return {};
+  try {
+    const { data, error } = await supabase
+      .from('scheduled_posts')
+      .select('*');
+
+    if (error) throw error;
+
+    const posts = {};
+    if (data) {
+      data.forEach(row => {
+        posts[row.id] = {
+          id: row.id,
+          memberId: row.member_id,
+          message: row.message,
+          imageUrl: row.image_url,
+          scheduledTime: row.scheduled_time,
+          status: row.status,
+          createdAt: row.created_at,
+          publishedAt: row.published_at,
+          linkedinResponse: row.linkedin_response,
+          error: row.error_message
+        };
+      });
+    }
+    return posts;
+  } catch (err) {
+    console.error('Error loading scheduled posts from Supabase:', err.message);
+    return {};
+  }
+}
+
+// Save scheduled post to Supabase
+async function saveScheduledPost(postId, post) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('scheduled_posts')
+      .upsert({
+        id: postId,
+        member_id: post.memberId,
+        message: post.message,
+        image_url: post.imageUrl,
+        scheduled_time: post.scheduledTime,
+        status: post.status,
+        created_at: post.createdAt,
+        published_at: post.publishedAt,
+        linkedin_response: post.linkedinResponse,
+        error_message: post.error
+      }, { onConflict: 'id' });
+
+    if (error) throw error;
+  } catch (err) {
+    console.error('Error saving scheduled post to Supabase:', err.message);
+  }
+}
+
+// Delete scheduled post from Supabase
+async function deleteScheduledPost(postId) {
+  if (!supabase) return;
+  try {
+    const { error } = await supabase
+      .from('scheduled_posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) throw error;
+  } catch (err) {
+    console.error('Error deleting scheduled post from Supabase:', err.message);
+  }
+}
+
+// In-memory token store (will be synced with Supabase)
+let tokens = {};
+
+// In-memory scheduled posts store (will be synced with Supabase)
+let scheduledPosts = {};
+
+// Initialize from Supabase on startup
+async function initializeFromSupabase() {
+  tokens = await loadTokens();
+  scheduledPosts = await loadScheduledPosts();
+  console.log('✓ Loaded from Supabase:', Object.keys(tokens).length, 'tokens,', Object.keys(scheduledPosts).length, 'scheduled posts');
+}
+
+initializeFromSupabase().catch(err => console.error('Failed to initialize from Supabase:', err.message));
 
 function linkedinAuthUrl(state) {
   // Scopes: openid profile for reading user info, w_member_social for posting
@@ -96,10 +233,12 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         console.log('Generated fallback memberId:', memberId);
       }
     }
-    tokens[memberId] = {
+    const tokenData = {
       access_token,
       expires_at: Date.now() + (expires_in * 1000)
     };
+    tokens[memberId] = tokenData;
+    await saveToken(memberId, tokenData);
 
     res.json({ success: true, memberId });
   } catch (err) {
@@ -342,7 +481,7 @@ app.post('/schedule', async (req, res) => {
     }
 
     const postId = 'scheduled_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    scheduledPosts[postId] = {
+    const post = {
       id: postId,
       memberId,
       message,
@@ -351,6 +490,8 @@ app.post('/schedule', async (req, res) => {
       status: 'scheduled',
       createdAt: new Date().toISOString()
     };
+    scheduledPosts[postId] = post;
+    await saveScheduledPost(postId, post);
 
     console.log(`Post scheduled for ${scheduleDate.toISOString()}:`, postId);
     res.json({ success: true, postId, scheduledTime: scheduleDate.toISOString() });
@@ -369,10 +510,11 @@ app.get('/scheduled-posts', (req, res) => {
 });
 
 // Cancel a scheduled post
-app.delete('/scheduled-posts/:postId', (req, res) => {
+app.delete('/scheduled-posts/:postId', async (req, res) => {
   const { postId } = req.params;
   if (scheduledPosts[postId]) {
     delete scheduledPosts[postId];
+    await deleteScheduledPost(postId);
     res.json({ success: true, message: 'Scheduled post cancelled' });
   } else {
     res.status(404).json({ error: 'Scheduled post not found' });
@@ -435,10 +577,12 @@ cron.schedule('* * * * *', async () => {
         post.publishedAt = new Date().toISOString();
         post.linkedinResponse = resp.data;
         console.log('Successfully published scheduled post:', postId);
+        await saveScheduledPost(postId, post);
       } catch (err) {
         console.error('Failed to publish scheduled post:', postId, err?.message);
         post.status = 'failed';
         post.error = err?.message;
+        await saveScheduledPost(postId, post);
       }
     }
   }

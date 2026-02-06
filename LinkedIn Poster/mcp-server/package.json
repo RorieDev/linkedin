@@ -9,6 +9,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "axios": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
