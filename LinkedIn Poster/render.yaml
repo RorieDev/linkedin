@@ -1,0 +1,28 @@
+services:
+  # Backend API Service
+  - type: web
+    name: linkedin-poster-api
+    runtime: node
+    plan: free
+    buildCommand: cd mcp-server && npm install
+    startCommand: cd mcp-server && npm start
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: LINKEDIN_CLIENT_ID
+        sync: false
+      - key: LINKEDIN_CLIENT_SECRET
+        sync: false
+      - key: LINKEDIN_REDIRECT_URI
+        value: https://linkedin-poster-api.onrender.com/auth/linkedin/callback
+      - key: OPENAI_API_KEY
+        sync: false
+
+  # Frontend Static Site
+  - type: static_site
+    name: linkedin-poster-web
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://linkedin-poster-api.onrender.com

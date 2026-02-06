@@ -1,0 +1,447 @@
+import express from 'express';
+import axios from 'axios';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { OpenAI } from 'openai';
+import https from 'https';
+import http from 'http';
+import cron from 'node-cron';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const PORT = process.env.PORT || 4000;
+const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
+const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
+const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI;
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
+  console.warn('Missing LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET / LINKEDIN_REDIRECT_URI in env');
+}
+
+// In-memory token store for demo purposes
+const tokens = { };
+
+// In-memory scheduled posts store
+const scheduledPosts = {};
+
+function linkedinAuthUrl(state) {
+  // Scopes: openid profile for reading user info, w_member_social for posting
+  const scope = encodeURIComponent('openid profile w_member_social');
+  return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}&state=${state}`;
+}
+
+app.get('/auth/linkedin', (req, res) => {
+  const state = Math.random().toString(36).slice(2);
+  res.redirect(linkedinAuthUrl(state));
+});
+
+app.get('/auth/linkedin/callback', async (req, res) => {
+  console.log('=== LINKEDIN OAUTH CALLBACK ===');
+  console.log('Query params:', { code: req.query.code?.substring(0, 20), state: req.query.state, error: req.query.error });
+  const { code, state, error } = req.query;
+  if (error) return res.status(400).json({ error });
+  if (!code) return res.status(400).json({ error: 'Missing code' });
+
+  try {
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', REDIRECT_URI);
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+
+    const tokenResp = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', params.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const { access_token, expires_in, id_token } = tokenResp.data;
+
+    // For OpenID Connect, extract user ID from id_token or access_token
+    let memberId = null;
+
+    // Try to decode the id_token JWT (without verification for now)
+    if (id_token) {
+      try {
+        const parts = id_token.split('.');
+        const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        memberId = decoded.sub || decoded.id;
+        console.log('Extracted memberId from id_token:', memberId);
+      } catch (e) {
+        console.log('Failed to decode id_token:', e.message);
+      }
+    }
+
+    // Fallback: Try to fetch with minimal permissions
+    if (!memberId) {
+      try {
+        const meResp = await axios.get('https://api.linkedin.com/v2/me', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        memberId = meResp.data.id;
+        console.log('Fetched memberId from /me endpoint:', memberId);
+      } catch (err) {
+        console.error('Failed to fetch /me:', err?.response?.data || err.message);
+        // Last resort: Use a generated ID based on access_token hash
+        const crypto = require('crypto');
+        memberId = 'li_' + crypto.createHash('sha256').update(access_token).digest('hex').substring(0, 16);
+        console.log('Generated fallback memberId:', memberId);
+      }
+    }
+    tokens[memberId] = {
+      access_token,
+      expires_at: Date.now() + (expires_in * 1000)
+    };
+
+    res.json({ success: true, memberId });
+  } catch (err) {
+    console.error(err?.response?.data || err.message);
+    res.status(500).json({ error: 'Token exchange or profile fetch failed' });
+  }
+});
+
+// Generate AI content. Body: { prompt, topic, sourceUrl }
+app.post('/generate', async (req, res) => {
+  const { prompt, topic, sourceUrl } = req.body;
+
+  if (!prompt && !topic) {
+    return res.status(400).json({ error: 'prompt or topic required' });
+  }
+
+  try {
+    const userPrompt = prompt || `Write a compelling LinkedIn post about: ${topic}${sourceUrl ? ` based on this URL: ${sourceUrl}` : ''}. Make it engaging, professional, and suitable for posting on LinkedIn. Include relevant hashtags.`;
+
+    console.log('Generating content with prompt:', userPrompt.substring(0, 100));
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `Write LinkedIn posts as pure storytelling and curiosity. No advice, no insights, no prescriptions whatsoever. Just:
+
+WRITE LIKE YOU'RE:
+- Telling a funny or interesting story that happened
+- Noticing something ridiculous or ironic and commenting on the absurdity
+- Wondering out loud about something that confuses or intrigues you (genuine curiosity, not rhetorical)
+- Sharing what you're currently trying to figure out or understand
+- Making a witty observation about human nature, work culture, or everyday situations
+- Describing a weird contradiction you spotted
+- Riffing on something that caught your attention
+
+NOT LIKE YOU'RE:
+- Giving advice or tips
+- Telling people what works or doesn't work
+- Making broad claims about how things "should" be
+- Offering lessons or takeaways
+- Persuading anyone of anything
+- Even subtly suggesting better ways to do things
+
+TONE:
+- Conversational and genuinely curious
+- Funny when it naturally fits
+- Honest about confusion or uncertainty
+- Self-aware and a bit wry
+- Uses strict British English (colour, organisation, realise, analyse, etc.)
+- Authentic—like you're thinking out loud with peers, not performing for an audience
+
+TECHNICAL:
+- MAXIMUM 2-3 paragraphs only
+- MUST start with 🚨 and end with 🚨
+- MUST be directly about the topic provided
+- NO engagement tactics ("What do you think?", "Let me know below", etc.)
+- NO emojis except the required 🚨 ones
+- NO prescriptive language whatsoever—if you catch yourself saying anything about what people should do or think, delete it`
+        },
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.5
+    });
+
+    const generatedContent = response.choices[0].message.content;
+    console.log('Generated content:', generatedContent.substring(0, 100));
+
+    res.json({ success: true, content: generatedContent });
+  } catch (err) {
+    console.error('OpenAI error:', err?.message);
+    res.status(500).json({ error: 'Failed to generate content', details: err?.message });
+  }
+});
+
+// Generate image. Body: { topic, sourceUrl }
+app.post('/generate-image', async (req, res) => {
+  const { topic, sourceUrl } = req.body;
+
+  if (!topic) {
+    return res.status(400).json({ error: 'topic required' });
+  }
+
+  try {
+    const imagePrompt = `A candid, authentic photo-realistic image capturing a funny human moment. Real people in genuine expressions and interactions. No signs, banners, papers, documents, whiteboards, screens, labels, or anything with writing. Pure human moments—expressions, body language, interactions, emotions. Witty through visuals alone, not through text. Professional yet authentic, natural lighting, genuine situations. NO TEXT OF ANY KIND ANYWHERE IN THE IMAGE.`;
+
+    console.log('Generating image with prompt:', imagePrompt.substring(0, 100));
+
+    const response = await openai.images.generate({
+      model: 'dall-e-3',
+      prompt: imagePrompt,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard'
+    });
+
+    const imageUrl = response.data[0].url;
+    console.log('Generated image URL:', imageUrl);
+
+    res.json({ success: true, imageUrl });
+  } catch (err) {
+    console.error('Image generation error:', err?.message);
+    res.status(500).json({ error: 'Failed to generate image', details: err?.message });
+  }
+});
+
+// Helper function to download image and upload to LinkedIn
+async function uploadImageToLinkedIn(imageUrl, memberId, accessToken) {
+  try {
+    // Download the image
+    console.log('Downloading image from:', imageUrl);
+    const imageResp = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const imageBuffer = Buffer.from(imageResp.data, 'binary');
+
+    // Initialize upload to LinkedIn
+    console.log('Initializing image upload to LinkedIn...');
+    const initResp = await axios.post(
+      'https://api.linkedin.com/v2/images?action=INIT',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      }
+    );
+
+    const uploadUrl = initResp.data.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+    const mediaAsset = initResp.data.mediaAsset;
+
+    console.log('Uploading image to:', uploadUrl);
+    // Upload the image
+    await axios.put(uploadUrl, imageBuffer, {
+      headers: {
+        'Content-Type': 'image/png'
+      }
+    });
+
+    console.log('Image uploaded successfully. Media asset:', mediaAsset);
+    return mediaAsset;
+  } catch (err) {
+    console.error('Image upload error:', err?.response?.data || err?.message);
+    throw err;
+  }
+}
+
+// Post a UGC post with optional image. Body: { memberId, message, imageUrl }
+app.post('/post', async (req, res) => {
+  console.log('=== POST REQUEST RECEIVED ===');
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+  const { memberId, message, imageUrl } = req.body;
+  console.log('Extracted memberId:', memberId, 'Message length:', message?.length, 'Has image:', !!imageUrl);
+  if (!memberId || !message) return res.status(400).json({ error: 'memberId and message required' });
+
+  // Support demo mode for testing (demo_user_* IDs)
+  if (memberId.startsWith('demo_user_')) {
+    return res.json({
+      success: true,
+      data: {
+        id: `demo_post_${Date.now()}`,
+        message: `[DEMO MODE] Posted: ${message.substring(0, 50)}...`,
+        memberId,
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+
+  const entry = tokens[memberId];
+  if (!entry) return res.status(404).json({ error: 'No token for this memberId. Complete OAuth flow first.' });
+
+  try {
+    const author = `urn:li:person:${memberId}`;
+    let media = [];
+    let shareMediaCategory = 'NONE';
+
+    // Upload image if provided
+    if (imageUrl) {
+      console.log('Uploading image...');
+      const mediaAsset = await uploadImageToLinkedIn(imageUrl, memberId, entry.access_token);
+      media.push({
+        status: 'READY',
+        description: {
+          text: 'Generated LinkedIn post image'
+        },
+        media: mediaAsset
+      });
+      shareMediaCategory = 'IMAGE';
+    }
+
+    const body = {
+      author,
+      lifecycleState: 'PUBLISHED',
+      visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS" },
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: message },
+          shareMediaCategory,
+          ...(media.length > 0 && { media })
+        }
+      }
+    };
+
+    console.log('Posting to LinkedIn with body:', JSON.stringify(body, null, 2));
+    const resp = await axios.post('https://api.linkedin.com/v2/ugcPosts', body, {
+      headers: {
+        Authorization: `Bearer ${entry.access_token}`,
+        'X-Restli-Protocol-Version': '2.0.0',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Post response status:', resp.status);
+    console.log('Post response data:', JSON.stringify(resp.data, null, 2));
+    res.json({ success: true, data: resp.data });
+  } catch (err) {
+    console.error('Post error:', err?.response?.data || err.message);
+    res.status(500).json({ error: 'Post failed', details: err?.response?.data || err.message });
+  }
+});
+
+app.get('/tokens', (req, res) => res.json(tokens));
+
+// Schedule a post for later. Body: { memberId, message, imageUrl, scheduledTime }
+app.post('/schedule', async (req, res) => {
+  const { memberId, message, imageUrl, scheduledTime } = req.body;
+
+  if (!memberId || !message || !scheduledTime) {
+    return res.status(400).json({ error: 'memberId, message, and scheduledTime required' });
+  }
+
+  try {
+    const scheduleDate = new Date(scheduledTime);
+    if (scheduleDate < new Date()) {
+      return res.status(400).json({ error: 'Scheduled time must be in the future' });
+    }
+
+    const postId = 'scheduled_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    scheduledPosts[postId] = {
+      id: postId,
+      memberId,
+      message,
+      imageUrl,
+      scheduledTime: scheduleDate.toISOString(),
+      status: 'scheduled',
+      createdAt: new Date().toISOString()
+    };
+
+    console.log(`Post scheduled for ${scheduleDate.toISOString()}:`, postId);
+    res.json({ success: true, postId, scheduledTime: scheduleDate.toISOString() });
+  } catch (err) {
+    console.error('Scheduling error:', err?.message);
+    res.status(500).json({ error: 'Failed to schedule post', details: err?.message });
+  }
+});
+
+// Get all scheduled posts
+app.get('/scheduled-posts', (req, res) => {
+  const posts = Object.values(scheduledPosts).sort((a, b) =>
+    new Date(a.scheduledTime) - new Date(b.scheduledTime)
+  );
+  res.json({ success: true, posts });
+});
+
+// Cancel a scheduled post
+app.delete('/scheduled-posts/:postId', (req, res) => {
+  const { postId } = req.params;
+  if (scheduledPosts[postId]) {
+    delete scheduledPosts[postId];
+    res.json({ success: true, message: 'Scheduled post cancelled' });
+  } else {
+    res.status(404).json({ error: 'Scheduled post not found' });
+  }
+});
+
+// Job scheduler - check every minute for posts to publish
+cron.schedule('* * * * *', async () => {
+  const now = new Date();
+
+  for (const [postId, post] of Object.entries(scheduledPosts)) {
+    if (post.status === 'scheduled' && new Date(post.scheduledTime) <= now) {
+      console.log('Publishing scheduled post:', postId);
+      post.status = 'publishing';
+
+      try {
+        // Post to LinkedIn
+        const author = `urn:li:person:${post.memberId}`;
+        let media = [];
+        let shareMediaCategory = 'NONE';
+
+        if (post.imageUrl) {
+          const entry = tokens[post.memberId];
+          if (entry) {
+            const mediaAsset = await uploadImageToLinkedIn(post.imageUrl, post.memberId, entry.access_token);
+            media.push({
+              status: 'READY',
+              description: { text: 'Generated LinkedIn post image' },
+              media: mediaAsset
+            });
+            shareMediaCategory = 'IMAGE';
+          }
+        }
+
+        const body = {
+          author,
+          lifecycleState: 'PUBLISHED',
+          visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS" },
+          specificContent: {
+            'com.linkedin.ugc.ShareContent': {
+              shareCommentary: { text: post.message },
+              shareMediaCategory,
+              ...(media.length > 0 && { media })
+            }
+          }
+        };
+
+        const entry = tokens[post.memberId];
+        if (!entry) throw new Error('No token for this memberId');
+
+        const resp = await axios.post('https://api.linkedin.com/v2/ugcPosts', body, {
+          headers: {
+            Authorization: `Bearer ${entry.access_token}`,
+            'X-Restli-Protocol-Version': '2.0.0',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        post.status = 'published';
+        post.publishedAt = new Date().toISOString();
+        post.linkedinResponse = resp.data;
+        console.log('Successfully published scheduled post:', postId);
+      } catch (err) {
+        console.error('Failed to publish scheduled post:', postId, err?.message);
+        post.status = 'failed';
+        post.error = err?.message;
+      }
+    }
+  }
+});
+
+app.listen(PORT, () => console.log(`LinkedIn MCP server running on http://localhost:${PORT}`));
