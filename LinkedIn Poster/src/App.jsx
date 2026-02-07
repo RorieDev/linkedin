@@ -855,6 +855,21 @@ const App = () => {
                         )}
                         {isGeneratingImage ? 'Generating...' : 'Generate Image'}
                       </button>
+                      {(postContent || postImage) && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Clear all generated content?')) {
+                              setPostContent('');
+                              setPostImage('');
+                            }
+                          }}
+                          className="btn-icon-label text-red-500 hover:bg-red-500/10"
+                          title="Clear generated content"
+                        >
+                          <Trash2 size={16} />
+                          Clear
+                        </button>
+                      )}
                     </div>
                   </div>
                   <textarea
