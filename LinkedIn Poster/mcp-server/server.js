@@ -785,26 +785,18 @@ cron.schedule('* * * * *', async () => {
   }
 });
 
-// Serve frontend static files from dist directory
-const distPath = path.join(__dirname, '../dist');
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
-console.log('📁 Checking for dist folder at:', distPath);
-if (fs.existsSync(distPath)) {
-  console.log('✅ dist folder found, serving static files');
-  app.use(express.static(distPath));
-
-  // SPA fallback: serve index.html for all unmatched routes (client-side routing)
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
-  });
-} else {
-  console.warn('⚠️  dist folder NOT found at:', distPath);
-  console.warn('Frontend will not be served. Ensure npm run build was executed during Render build.');
-
-  // Fallback 404 for missing frontend
-  app.get('*', (req, res) => {
-    res.status(404).json({ error: 'Frontend not found. Build may have failed.' });
-  });
-}
+// TODO: Serve frontend static files from dist directory
+// const distPath = path.join(__dirname, '../dist');
+// if (fs.existsSync(distPath)) {
+//   app.use(express.static(distPath));
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(distPath, 'index.html'));
+//   });
+// }
 
 app.listen(PORT, () => console.log(`LinkedIn MCP server running on http://localhost:${PORT}`));
