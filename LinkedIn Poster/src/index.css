@@ -5,11 +5,11 @@
   --primary-hover: #be123c;
   --bg-dark: #e11d48;
   --card-bg: transparent;
-  --card-border: rgba(255, 255, 255, 0.4);
+  --card-border: transparent;
   --text-main: #ffffff;
   --text-muted: #ffffff;
   --glass: transparent;
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-border: transparent;
   --accent: #22c55e;
   --sidebar-width: 280px;
   --header-height: 70px;
