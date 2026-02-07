@@ -835,28 +835,26 @@ const App = () => {
                 </div>
 
                 <div className="post-editor rounded-2xl p-6 mt-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <label>Generated Post</label>
-                    <div className="flex gap-2">
+                  <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <label className="m-0">Generated Post</label>
+                    <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                       <button onClick={copyToClipboard} className="btn-icon-label" title="Copy to clipboard">
                         <Copy size={16} />
                         Copy
                       </button>
-                      {postContent && (
-                        <button
-                          onClick={generateImage}
-                          disabled={isGeneratingImage}
-                          className={`btn-icon-label ${isGeneratingImage ? 'loading' : ''}`}
-                          title="Generate image for this post"
-                        >
-                          {isGeneratingImage ? (
-                            <div className="spinner-small"></div>
-                          ) : (
-                            <ImageIcon size={16} />
-                          )}
-                          {isGeneratingImage ? 'Generating...' : 'Generate Image'}
-                        </button>
-                      )}
+                      <button
+                        onClick={generateImage}
+                        disabled={isGeneratingImage || (!topic && !sourceUrl)}
+                        className={`btn-icon-label ${isGeneratingImage ? 'loading' : ''}`}
+                        title="Generate image for this post"
+                      >
+                        {isGeneratingImage ? (
+                          <div className="spinner-small"></div>
+                        ) : (
+                          <ImageIcon size={16} />
+                        )}
+                        {isGeneratingImage ? 'Generating...' : 'Generate Image'}
+                      </button>
                     </div>
                   </div>
                   <textarea
