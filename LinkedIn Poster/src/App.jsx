@@ -754,45 +754,103 @@ const App = () => {
 
       <main className="main-content full-width">
         <div className="top-left-controls">
-          <button
-            className="hamburger-trigger"
-            onClick={() => setIsSidebarOpen(true)}
-            title="Open Menu"
-          >
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-5">
+            <button
+              className="hamburger-trigger"
+              onClick={() => setIsSidebarOpen(true)}
+              title="Open Menu"
+            >
+              <Menu size={24} />
+            </button>
 
-          <div className="user-profile header">
-            <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
-              {isConnected ? 'RD' : '?'}
+            <div className="user-profile header">
+              <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
+                {isConnected ? 'RD' : '?'}
+              </div>
+              <div className="user-info">
+                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
+                  {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
+                </p>
+              </div>
             </div>
-            <div className="user-info">
-              <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-              <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
-                {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
-              </p>
-            </div>
+          </div>
+
+          <div className="header-titles top-bar-titles">
+            <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
+            <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
           </div>
         </div>
 
-        <header className="main-header">
-          <div className="header-column">
-            <div className="header-titles">
-              <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
-              <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
-            </div>
-          </div>
-          <div className="header-actions-placeholder"></div>
-        </header>
-
         <div className="content-grid">
           {activeTab === 'creator' ? (
-            <>
+            <div className="creator-container">
+              {/* Preview Section - Now at the Top */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="preview-section top-preview"
+              >
+                <div className="preview-header mb-4">
+                  <div className="flex items-center gap-3">
+                    <h3>Preview</h3>
+                    <div className="preview-toggle">
+                      <button
+                        className={previewMode === 'desktop' ? 'active' : ''}
+                        onClick={() => setPreviewMode('desktop')}
+                      >
+                        Desktop
+                      </button>
+                      <button
+                        className={previewMode === 'mobile' ? 'active' : ''}
+                        onClick={() => setPreviewMode('mobile')}
+                      >
+                        Mobile
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`linkedin-mockup ${previewMode}`}>
+                  <div className="mockup-header">
+                    <div className="mockup-avatar profile">
+                      RD
+                    </div>
+                    <div className="mockup-user">
+                      <p className="m-name">Rorie Devine <span className="dropdown">▼</span></p>
+                      <p className="m-bio">Post to Anyone</p>
+                      <p className="m-time">Just now • 🌐</p>
+                    </div>
+                    <MoreHorizontal className="mockup-more" />
+                  </div>
+                  <div className={`mockup-content ${!postContent ? 'empty' : ''}`}>
+                    {postContent ? (
+                      <>
+                        {postContent.split('\n').map((line, i) => (
+                          <p key={i}>{line || <br />}</p>
+                        ))}
+                        {postImage && (
+                          <img src={postImage} alt="Generated post image" className="mockup-image" />
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-muted italic">Start generating to see how your post looks on LinkedIn...</p>
+                    )}
+                  </div>
+                  <div className="mockup-actions">
+                    <button><ThumbsUp size={18} /> Like</button>
+                    <button><MessageSquare size={18} /> Comment</button>
+                    <button><Repeat2 size={18} /> Repost</button>
+                    <button><Send size={18} /> Send</button>
+                  </div>
+                </div>
+              </motion.div>
+
               {/* Creator Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="creator-section"
+                className="creator-section mt-8"
               >
                 <div className="input-group rounded-2xl p-6">
                   <div className="source-inputs mb-6">
@@ -883,7 +941,6 @@ const App = () => {
                       className="btn-secondary"
                       onClick={(e) => {
                         e.preventDefault();
-                        console.log('Schedule button clicked, isScheduleModalOpen:', isScheduleModalOpen);
                         setIsScheduleModalOpen(true);
                       }}
                       disabled={!postContent}
@@ -898,66 +955,7 @@ const App = () => {
                   )}
                 </div>
               </motion.div>
-
-              {/* Preview Section */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="preview-section"
-              >
-                <div className="preview-header mb-4">
-                  <h3>Preview</h3>
-                  <div className="preview-toggle">
-                    <button
-                      className={previewMode === 'desktop' ? 'active' : ''}
-                      onClick={() => setPreviewMode('desktop')}
-                    >
-                      Desktop
-                    </button>
-                    <button
-                      className={previewMode === 'mobile' ? 'active' : ''}
-                      onClick={() => setPreviewMode('mobile')}
-                    >
-                      Mobile
-                    </button>
-                  </div>
-                </div>
-
-                <div className={`linkedin-mockup ${previewMode}`}>
-                  <div className="mockup-header">
-                    <div className="mockup-avatar profile">
-                      RD
-                    </div>
-                    <div className="mockup-user">
-                      <p className="m-name">Rorie Devine <span className="dropdown">▼</span></p>
-                      <p className="m-bio">Post to Anyone</p>
-                      <p className="m-time">Just now • 🌐</p>
-                    </div>
-                    <MoreHorizontal className="mockup-more" />
-                  </div>
-                  <div className="mockup-content">
-                    {postContent ? (
-                      <>
-                        {postContent.split('\n').map((line, i) => (
-                          <p key={i}>{line || <br />}</p>
-                        ))}
-                        {postImage && (
-                          <img src={postImage} alt="Generated post image" className="mockup-image" />
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-muted italic">Start generating to see how your post looks on LinkedIn...</p>
-                    )}
-                  </div>
-                  <div className="mockup-actions">
-                    <button><ThumbsUp size={18} /> Like</button>
-                    <button><MessageSquare size={18} /> Comment</button>
-                    <button><Repeat2 size={18} /> Repost</button>
-                    <button><Send size={18} /> Send</button>
-                  </div>
-                </div>
-              </motion.div>
-            </>
+            </div>
           ) : activeTab === 'history' ? (
             <div className="history-list full-width">
               {history.map(item => (
@@ -1045,13 +1043,7 @@ const App = () => {
           font-weight: 600;
         }
 
-        .top-left-controls {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          margin-bottom: 30px;
-          padding: 10px 0;
-        }
+
 
         .hamburger-trigger {
           background: transparent;
@@ -1115,16 +1107,37 @@ const App = () => {
           cursor: pointer;
         }
 
-        .header-titles {
-          text-align: left;
-          width: 100%;
+        .top-left-controls {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 20px;
+          margin-bottom: 20px;
+          padding: 10px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
-        .main-header h2 {
+        .top-bar-titles {
+          text-align: right;
+        }
+
+        .top-bar-titles h2 {
           font-family: var(--font-display);
-          font-size: 28px;
-          margin-bottom: 4px;
-          text-align: left;
+          font-size: 20px;
+          margin: 0;
+          color: white;
+        }
+
+        .top-bar-titles p {
+          font-size: 12px;
+          margin: 0;
+          opacity: 0.7;
+        }
+
+        .top-preview .preview-header h3 {
+          margin: 0;
+          font-size: 18px;
+          font-family: var(--font-display);
         }
 
         .sidebar-nav {
@@ -1189,23 +1202,40 @@ const App = () => {
         .main-content {
           margin-left: 0;
           flex: 1;
-          padding: 20px 20px;
+          padding: 0 20px 20px 20px;
           max-width: 100%;
           width: 100%;
           transition: all 0.3s ease;
         }
 
         .content-grid {
-          display: grid;
-          grid-template-columns: minmax(550px, 850px) 1fr;
-          gap: 30px;
+          display: block;
         }
         
-        .main-header {
-          display: grid;
-          grid-template-columns: minmax(550px, 850px) 1fr;
-          gap: 30px;
-          margin-bottom: 20px;
+        .creator-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+
+        .top-preview {
+          margin-bottom: 30px;
+          background: rgba(255,255,255,0.03);
+          padding: 24px;
+          border-radius: 20px;
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .top-preview .linkedin-mockup {
+          margin: 0 auto;
+          max-width: 800px;
+        }
+
+        .mockup-content.empty {
+          min-height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         
         .header-column {
