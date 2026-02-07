@@ -3,6 +3,7 @@ import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { OpenAI } from 'openai';
+import { JSDOM } from 'jsdom';
 import https from 'https';
 import http from 'http';
 import cron from 'node-cron';
@@ -463,16 +464,74 @@ app.get('/auth/linkedin/callback/telegram/:telegramId', async (req, res) => {
   }
 });
 
+// Helper to scrape URL content
+async function scrapeUrl(url) {
+  if (!url) return null;
+  try {
+    console.log(`🔍 Scraping URL: ${url}`);
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5'
+      },
+      timeout: 10000
+    });
+
+    const dom = new JSDOM(response.data);
+    const doc = dom.window.document;
+
+    // Remove unwanted elements
+    const toRemove = doc.querySelectorAll('script, style, nav, footer, header, iframe, ads');
+    toRemove.forEach(el => el.remove());
+
+    // Try to find the article body first
+    const selectors = ['article', '.article-body', '.post-content', 'main', '.content'];
+    let contentEl = null;
+    for (const selector of selectors) {
+      const found = doc.querySelector(selector);
+      if (found) {
+        contentEl = found;
+        break;
+      }
+    }
+
+    const text = (contentEl || doc.body).textContent || '';
+    const cleanedText = text.replace(/\s+/g, ' ').trim().substring(0, 8000);
+    console.log(`✅ Scraped ${cleanedText.length} characters`);
+    return cleanedText;
+  } catch (err) {
+    console.warn(`⚠️ Scraping failed for ${url}:`, err.message);
+    return null;
+  }
+}
+
 // Generate AI content. Body: { prompt, topic, sourceUrl }
 app.post('/generate', async (req, res) => {
   const { prompt, topic, sourceUrl } = req.body;
 
-  if (!prompt && !topic) {
-    return res.status(400).json({ error: 'prompt or topic required' });
+  if (!prompt && !topic && !sourceUrl) {
+    return res.status(400).json({ error: 'prompt, topic, or sourceUrl required' });
   }
 
   try {
-    const userPrompt = prompt || `Write a compelling LinkedIn post about: ${topic}${sourceUrl ? ` based on this URL: ${sourceUrl}` : ''}. Make it engaging, professional, and suitable for posting on LinkedIn. Include relevant hashtags.`;
+    let scrapedContent = '';
+    let urlContext = '';
+    if (sourceUrl) {
+      const text = await scrapeUrl(sourceUrl);
+      if (text) {
+        scrapedContent = `\n\nSource Content from ${sourceUrl}:\n${text}`;
+        urlContext = ` based on the content from ${sourceUrl}`;
+      } else {
+        urlContext = ` based on this URL: ${sourceUrl}`;
+      }
+    }
+
+    const defaultPrompt = topic
+      ? `Write a compelling LinkedIn post about: ${topic}${urlContext}.`
+      : `Write a compelling LinkedIn post based on the provided source content.`;
+
+    const userPrompt = prompt || `${defaultPrompt}${scrapedContent} Make it engaging, professional, and suitable for posting on LinkedIn. Include relevant hashtags.`;
 
     console.log('Generating content with prompt:', userPrompt.substring(0, 100));
 
@@ -532,12 +591,23 @@ CRITICAL: Write EXACTLY about what they asked. No substitutions.`
 app.post('/generate-image', async (req, res) => {
   const { topic, sourceUrl } = req.body;
 
-  if (!topic) {
-    return res.status(400).json({ error: 'topic required' });
+  if (!topic && !sourceUrl) {
+    return res.status(400).json({ error: 'topic or sourceUrl required' });
   }
 
   try {
-    const imagePrompt = `A candid, authentic photo-realistic image capturing a funny human moment. Real people in genuine expressions and interactions. No signs, banners, papers, documents, whiteboards, screens, labels, or anything with writing. Pure human moments—expressions, body language, interactions, emotions. Witty through visuals alone, not through text. Professional yet authentic, natural lighting, genuine situations. NO TEXT OF ANY KIND ANYWHERE IN THE IMAGE.`;
+    let finalTopic = topic;
+    if (!finalTopic && sourceUrl) {
+      console.log('Generating image topic from URL...');
+      const text = await scrapeUrl(sourceUrl);
+      if (text) {
+        finalTopic = text.substring(0, 200);
+      } else {
+        finalTopic = sourceUrl;
+      }
+    }
+
+    const imagePrompt = `A candid, authentic photo-realistic image capturing a funny human moment related to: ${finalTopic}. Real people in genuine expressions and interactions. No signs, banners, papers, documents, whiteboards, screens, labels, or anything with writing. Pure human moments—expressions, body language, interactions, emotions. Witty through visuals alone, not through text. Professional yet authentic, natural lighting, genuine situations. NO TEXT OF ANY KIND ANYWHERE IN THE IMAGE.`;
 
     console.log('Generating image with prompt:', imagePrompt.substring(0, 100));
 

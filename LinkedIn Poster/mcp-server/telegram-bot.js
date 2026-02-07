@@ -50,21 +50,33 @@ export function initTelegramBot(supabase, tokens, openai) {
   // Helper: Fetch and extract text from URL
   async function fetchArticleContent(url) {
     try {
-      const response = await axios.get(url, { timeout: 5000 });
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        timeout: 10000
+      });
       const dom = new JSDOM(response.data);
       const document = dom.window.document;
 
       // Extract main content
       let text = '';
 
-      // Try to get article content
-      const article = document.querySelector('article') ||
-                     document.querySelector('main') ||
-                     document.querySelector('[role="main"]') ||
-                     document.body;
+      // Try to find the article body first
+      const selectors = ['article', '.article-body', '.post-content', 'main', '.content'];
+      let contentEl = null;
+      for (const selector of selectors) {
+        const found = document.querySelector(selector);
+        if (found) {
+          contentEl = found;
+          break;
+        }
+      }
 
-      // Remove script and style elements
-      article.querySelectorAll('script, style, nav, footer').forEach(el => el.remove());
+      const article = contentEl || document.body;
+
+      // Remove unwanted elements
+      article.querySelectorAll('script, style, nav, footer, header, iframe, ads').forEach(el => el.remove());
 
       // Get text content
       text = article.textContent
@@ -73,7 +85,7 @@ export function initTelegramBot(supabase, tokens, openai) {
         .filter(line => line.trim().length > 0)
         .join(' ')
         .replace(/\s+/g, ' ')
-        .substring(0, 2000); // Limit to 2000 chars for context
+        .substring(0, 8000); // Increased limit to 8000 chars
 
       return text || null;
     } catch (err) {
