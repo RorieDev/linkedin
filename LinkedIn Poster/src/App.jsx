@@ -912,13 +912,7 @@ const App = () => {
                         e.preventDefault();
                         setIsScheduleModalOpen(true);
                       }}
-                      disabled={!postContent}
-                      type="button"
-                    >
-                      <Calendar size={18} />
-                      Schedule
                     </button>
-                  </div>
                 </div>
                 {!isConnected && postContent && (
                   <p className="text-xs text-center mt-2 text-primary">Connect your LinkedIn to post directly</p>
