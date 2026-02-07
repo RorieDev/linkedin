@@ -7,6 +7,7 @@ import https from 'https';
 import http from 'http';
 import cron from 'node-cron';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { initTelegramBot } from './telegram-bot.js';
@@ -782,7 +783,6 @@ cron.schedule('* * * * *', async () => {
 
 // Serve frontend static files from dist directory
 const distPath = path.join(__dirname, '../dist');
-const fs = require('fs');
 
 console.log('📁 Checking for dist folder at:', distPath);
 if (fs.existsSync(distPath)) {
