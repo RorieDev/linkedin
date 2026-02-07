@@ -1504,7 +1504,6 @@ const App = () => {
           right: 0;
           height: 60px;
           background: var(--bg-dark);
-          backdrop-filter: blur(12px);
           border-bottom: 1px solid var(--card-border);
           z-index: 1500;
           align-items: center;
@@ -1549,7 +1548,6 @@ const App = () => {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100% !important;
             background: var(--bg-dark);
-            backdrop-filter: blur(20px);
             justify-content: center;
             align-items: center;
             text-align: center;

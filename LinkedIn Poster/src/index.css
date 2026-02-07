@@ -50,8 +50,6 @@ textarea {
 /* Glassmorphism utility */
 .glass-effect {
   background: var(--glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
 }
 
