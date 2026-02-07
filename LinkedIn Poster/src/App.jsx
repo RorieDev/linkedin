@@ -1202,7 +1202,7 @@ const App = () => {
 
         /* Buttons */
         .btn-primary {
-          background: var(--primary);
+          background: #0A66C2;
           color: white;
           padding: 10px 20px;
           border-radius: 10px;
@@ -1215,7 +1215,7 @@ const App = () => {
         }
 
         .btn-primary:hover:not(:disabled) {
-          background: var(--primary-hover);
+          background: #004182;
           transform: translateY(-1px);
         }
 
@@ -1230,7 +1230,7 @@ const App = () => {
         }
 
         .btn-secondary {
-          background: #ffffff33;
+          background: #000000;
           color: white;
           padding: 10px 20px;
           border-radius: 10px;
@@ -1238,11 +1238,11 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 8px;
-          border: 1px solid var(--card-border);
+          border: 1px solid #333333;
         }
 
         .btn-generate {
-          background: #be123c;
+          background: #000000;
           color: white;
           padding: 12px 24px;
           border-radius: 12px;
@@ -1284,7 +1284,7 @@ const App = () => {
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background: #ffffff44;
+          background: #222222;
         }
 
         .btn-secondary:disabled {
