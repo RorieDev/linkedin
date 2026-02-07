@@ -785,72 +785,11 @@ const App = () => {
         <div className="content-grid">
           {activeTab === 'creator' ? (
             <div className="creator-container">
-              {/* Preview Section - Now at the Top */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="preview-section top-preview"
-              >
-                <div className="preview-header mb-4">
-                  <div className="flex items-center gap-3">
-                    <h3>Preview</h3>
-                    <div className="preview-toggle">
-                      <button
-                        className={previewMode === 'desktop' ? 'active' : ''}
-                        onClick={() => setPreviewMode('desktop')}
-                      >
-                        Desktop
-                      </button>
-                      <button
-                        className={previewMode === 'mobile' ? 'active' : ''}
-                        onClick={() => setPreviewMode('mobile')}
-                      >
-                        Mobile
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`linkedin-mockup ${previewMode}`}>
-                  <div className="mockup-header">
-                    <div className="mockup-avatar profile">
-                      RD
-                    </div>
-                    <div className="mockup-user">
-                      <p className="m-name">Rorie Devine <span className="dropdown">▼</span></p>
-                      <p className="m-bio">Post to Anyone</p>
-                      <p className="m-time">Just now • 🌐</p>
-                    </div>
-                    <MoreHorizontal className="mockup-more" />
-                  </div>
-                  <div className={`mockup-content ${!postContent ? 'empty' : ''}`}>
-                    {postContent ? (
-                      <>
-                        {postContent.split('\n').map((line, i) => (
-                          <p key={i}>{line || <br />}</p>
-                        ))}
-                        {postImage && (
-                          <img src={postImage} alt="Generated post image" className="mockup-image" />
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-muted italic">Start generating to see how your post looks on LinkedIn...</p>
-                    )}
-                  </div>
-                  <div className="mockup-actions">
-                    <button><ThumbsUp size={18} /> Like</button>
-                    <button><MessageSquare size={18} /> Comment</button>
-                    <button><Repeat2 size={18} /> Repost</button>
-                    <button><Send size={18} /> Send</button>
-                  </div>
-                </div>
-              </motion.div>
-
               {/* Creator Section */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="creator-section mt-8"
+                className="creator-section"
               >
                 <div className="input-group rounded-2xl p-6">
                   <div className="source-inputs mb-6">
@@ -922,6 +861,20 @@ const App = () => {
                     placeholder="Your generated post will appear here..."
                     className="content-textarea"
                   />
+
+                  {postImage && (
+                    <div className="generated-image-preview mt-4 relative group">
+                      <img src={postImage} alt="Generated" className="rounded-xl w-full object-cover max-h-[400px]" />
+                      <button
+                        onClick={() => setPostImage('')}
+                        className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remove image"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="publish-controls mt-4">
                     <button
                       className={`btn-primary ${isPosting ? 'loading' : ''}`}
@@ -1115,10 +1068,22 @@ const App = () => {
           margin-bottom: 20px;
           padding: 10px 0;
           border-bottom: 1px solid rgba(255,255,255,0.05);
+          position: relative;
         }
 
         .top-bar-titles {
-          text-align: right;
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          text-align: center;
+          width: auto; /* Changed from 100% to auto to avoid overlap with buttons */
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .top-bar-titles h2, .top-bar-titles p {
+          pointer-events: auto;
+          text-align: center; /* Explicitly center text */
         }
 
         .top-bar-titles h2 {
@@ -1129,9 +1094,10 @@ const App = () => {
         }
 
         .top-bar-titles p {
-          font-size: 12px;
-          margin: 0;
-          opacity: 0.7;
+          font-size: 13px; /* Slightly larger for better readability */
+          margin: 2px 0 0 0;
+          opacity: 0.8;
+          text-align: center;
         }
 
         .top-preview .preview-header h3 {
@@ -1689,11 +1655,9 @@ const App = () => {
 
         @media (max-width: 1100px) {
           .content-grid { grid-template-columns: 1fr; }
-          .preview-section { order: -1; }
         }
 
         @media (max-width: 850px) {
-          .preview-section { display: none; }
           .mobile-top-bar { display: flex; }
 
           
