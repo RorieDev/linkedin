@@ -818,10 +818,6 @@ const App = () => {
                           {isGeneratingImage ? 'Generating...' : 'Generate Image'}
                         </button>
                       )}
-                      <button className="btn-icon-label" title="Download Image">
-                        <ImageIcon size={16} />
-                        Assets
-                      </button>
                     </div>
                   </div>
                   <textarea
