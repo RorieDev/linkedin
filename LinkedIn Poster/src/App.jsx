@@ -318,6 +318,19 @@ const App = () => {
     localStorage.setItem('linkedin_connected', isConnected);
   }, [isConnected]);
 
+  // Auto-ping server on page load to wake it up from Render sleep
+  useEffect(() => {
+    const wakeUpServer = async () => {
+      try {
+        await fetch(`${API_URL}/health`, { method: 'GET' });
+        console.log('✅ Server pinged successfully');
+      } catch (err) {
+        console.log('⚠️ Server wake-up ping failed (expected if server is cold starting)');
+      }
+    };
+    wakeUpServer();
+  }, []);
+
   const generatePost = async () => {
     if (!topic && !sourceUrl) return;
     setIsGenerating(true);
@@ -1445,8 +1458,8 @@ const App = () => {
         .flex { display: flex; }
         .items-center { align-items: center; }
         .justify-between { justify-content: space-between; }
-        .gap-2 { gap: 8px; }
-        .gap-3 { gap: 12px; }
+        .gap-2 { gap: 6px; }
+        .gap-3 { gap: 8px; }
         .p-6 { padding: 16px; }
         .mt-4 { margin-top: 8px; }
         .mt-6 { margin-top: 16px; }
@@ -1506,13 +1519,13 @@ const App = () => {
           top: 0;
           left: 0;
           right: 0;
-          height: 60px;
+          height: 50px;
           background: var(--bg-dark);
           border-bottom: 1px solid var(--card-border);
           z-index: 1500;
           align-items: center;
           justify-content: center;
-          padding: 0 20px;
+          padding: 0 16px;
         }
 
         .mobile-menu-trigger {
@@ -1572,25 +1585,29 @@ const App = () => {
           .main-content {
             margin-left: 0 !important;
             width: 100% !important;
-            padding: 80px 20px 40px 20px !important;
+            padding: 45px 12px 10px 12px !important;
             text-align: center;
           }
 
           .main-header {
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 32px;
+            gap: 4px;
+            margin-bottom: 8px;
           }
 
-          .header-titles {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+          .header-titles p {
+            display: none; /* Hide subtitle on mobile to save space */
+          }
+
+          .header-titles h2 {
+            font-size: 20px;
+            margin-bottom: 0;
           }
 
           .btn-primary.btn-sm {
             width: auto;
+            padding: 6px 16px;
           }
 
           .creator-section {
@@ -1598,25 +1615,45 @@ const App = () => {
           }
 
           .input-group {
-            padding: 16px !important;
+            padding: 10px !important;
           }
 
           .input-group label, .post-editor label {
             display: block;
             width: 100%;
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 2px;
+            font-size: 13px;
           }
+
+          .url-input, .topic-input, .content-textarea {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+          }
+
+          .topic-input {
+            min-height: 50px !important;
+          }
+
+          .content-textarea {
+            min-height: 100px !important;
+          }
+
+          .mt-6 { margin-top: 8px !important; }
+          .mb-6 { margin-bottom: 8px !important; }
+          .mt-4 { margin-top: 6px !important; }
+          .mb-4 { margin-bottom: 6px !important; }
 
           .preview-header {
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
           }
 
           .publish-controls {
             flex-direction: column;
             width: 100%;
+            gap: 8px;
           }
 
           .publish-controls button {
