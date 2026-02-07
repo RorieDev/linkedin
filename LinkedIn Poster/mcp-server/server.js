@@ -175,19 +175,31 @@ let scheduledPosts = {};
 
 // Initialize from Supabase on startup
 async function initializeFromSupabase() {
-  tokens = await loadTokens();
-  scheduledPosts = await loadScheduledPosts();
-  console.log('✓ Loaded from Supabase:', Object.keys(tokens).length, 'tokens,', Object.keys(scheduledPosts).length, 'scheduled posts');
+  try {
+    console.log('📡 Loading tokens from Supabase...');
+    tokens = await loadTokens();
+    console.log('📡 Loading scheduled posts from Supabase...');
+    scheduledPosts = await loadScheduledPosts();
+    console.log('✓ Loaded from Supabase:', Object.keys(tokens).length, 'tokens,', Object.keys(scheduledPosts).length, 'scheduled posts');
+  } catch (err) {
+    console.error('❌ Supabase initialization error:', err.message);
+    throw err;
+  }
 }
 
 // Initialize Telegram bot
 let telegramBot = null;
 
+console.log('🔄 Starting initialization...');
 initializeFromSupabase()
   .then(() => {
+    console.log('✅ Supabase loaded successfully');
     telegramBot = initTelegramBot(supabase, tokens, openai);
   })
-  .catch(err => console.error('Failed to initialize:', err.message));
+  .catch(err => {
+    console.error('❌ Failed to initialize Supabase:', err.message);
+    console.log('⚠️  Continuing without Supabase data...');
+  });
 
 function linkedinAuthUrl(state) {
   // Scopes: openid profile for reading user info, w_member_social for posting
@@ -799,4 +811,9 @@ app.get('/health', (req, res) => {
 //   });
 // }
 
-app.listen(PORT, () => console.log(`LinkedIn MCP server running on http://localhost:${PORT}`));
+console.log('🚀 About to listen on PORT:', PORT);
+app.listen(PORT, () => {
+  console.log(`✅ LinkedIn MCP server running on http://localhost:${PORT}`);
+  console.log('📡 Health check: GET /health');
+  console.log('🤖 API endpoints ready');
+});
