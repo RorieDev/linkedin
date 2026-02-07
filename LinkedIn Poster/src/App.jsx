@@ -1246,7 +1246,7 @@ const App = () => {
         }
 
         .btn-generate {
-          background: linear-gradient(135deg, #0A66C2 0%, #1e40af 100%);
+          background: linear-gradient(135deg, var(--primary) 0%, #be123c 100%);
           color: white;
           padding: 12px 24px;
           border-radius: 12px;
@@ -1254,7 +1254,7 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 4px 15px rgba(10, 102, 194, 0.3);
+          box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
           width: 100%;
           justify-content: center;
         }
@@ -1367,7 +1367,7 @@ const App = () => {
         .mockup-avatar {
           width: 48px;
           height: 48px;
-          background: #0A66C2;
+          background: #e11d48;
           border-radius: 50%;
           color: white;
           display: flex;
