@@ -4,8 +4,8 @@ services:
     name: linkedin-poster-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && cd mcp-server && npm install
-    startCommand: cd mcp-server && npm start
+    buildCommand: cd "LinkedIn Poster" && npm install && npm run build && cd mcp-server && npm install
+    startCommand: cd "LinkedIn Poster/mcp-server" && npm start
     envVars:
       - key: PORT
         value: 4000
