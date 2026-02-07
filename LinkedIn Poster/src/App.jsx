@@ -17,7 +17,9 @@ import {
   Trash2,
   Copy,
   CheckCircle2,
-  Globe
+  Globe,
+  Menu,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PWAPrompt from './components/PWAPrompt';
@@ -274,6 +276,7 @@ const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('creator');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [postContent, setPostContent] = useState('');
   const [postImage, setPostImage] = useState('');
   const [topic, setTopic] = useState('');
@@ -646,8 +649,18 @@ const App = () => {
         )}
       </AnimatePresence>
 
+      <header className="mobile-top-bar">
+        <button className="mobile-menu-trigger" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          <span>Menu</span>
+        </button>
+      </header>
+
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <div className="mobile-close" onClick={() => setIsSidebarOpen(false)}>
+          <X size={24} />
+        </div>
         <div className="logo-container">
           <div className="logo-icon">
             <Sparkles className="text-primary" fill="currentColor" />
@@ -660,13 +673,19 @@ const App = () => {
             icon={Plus}
             label="Create Post"
             active={activeTab === 'creator'}
-            onClick={() => setActiveTab('creator')}
+            onClick={() => {
+              setActiveTab('creator');
+              setIsSidebarOpen(false);
+            }}
           />
           <SidebarItem
             icon={History}
             label="History"
             active={activeTab === 'history'}
-            onClick={() => setActiveTab('history')}
+            onClick={() => {
+              setActiveTab('history');
+              setIsSidebarOpen(false);
+            }}
           />
           <SidebarItem
             icon={Calendar}
@@ -675,13 +694,17 @@ const App = () => {
             onClick={() => {
               setActiveTab('schedule');
               loadScheduledPosts();
+              setIsSidebarOpen(false);
             }}
           />
           <SidebarItem
             icon={Settings}
             label="Settings"
             active={activeTab === 'settings'}
-            onClick={() => setActiveTab('settings')}
+            onClick={() => {
+              setActiveTab('settings');
+              setIsSidebarOpen(false);
+            }}
           />
         </nav>
 
@@ -709,17 +732,17 @@ const App = () => {
           </div>
           <button
             onClick={toggleConnection}
-            className={`btn-primary ${isConnected ? 'btn-connected' : ''}`}
+            className={`btn-primary btn-sm ${isConnected ? 'btn-connected' : ''}`}
           >
             {isConnected ? (
               <>
-                <CheckCircle2 size={18} />
-                LinkedIn Connected
+                <CheckCircle2 size={14} />
+                Connected
               </>
             ) : (
               <>
-                <Linkedin size={18} />
-                Connect LinkedIn
+                <Linkedin size={14} />
+                Connect
               </>
             )}
           </button>
@@ -1472,9 +1495,116 @@ const App = () => {
           color: #A855F7;
         }
 
+        .btn-sm {
+          padding: 6px 14px;
+          font-size: 13px;
+        }
+
+        .mobile-top-bar {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 60px;
+          background: rgba(5, 5, 5, 0.8);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid var(--card-border);
+          z-index: 1500;
+          align-items: center;
+          justify-content: center;
+          padding: 0 20px;
+        }
+
+        .mobile-menu-trigger {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          color: white;
+          border: 1px solid var(--card-border);
+          padding: 6px 16px;
+          border-radius: 50px;
+          font-weight: 500;
+          font-size: 14px;
+        }
+
+        .mobile-close {
+          display: none;
+          position: absolute;
+          top: 24px;
+          right: 24px;
+          color: white;
+          cursor: pointer;
+        }
+
         @media (max-width: 1100px) {
           .content-grid { grid-template-columns: 1fr; }
           .preview-section { order: -1; }
+        }
+
+        @media (max-width: 850px) {
+          .mobile-top-bar { display: flex; }
+          
+          .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100% !important;
+            background: rgba(5, 5, 5, 0.98);
+            backdrop-filter: blur(20px);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+          }
+
+          .sidebar.open {
+            transform: translateX(0);
+          }
+
+          .sidebar-nav {
+            justify-content: center;
+            align-items: center;
+            flex: initial;
+          }
+
+          .mobile-close { display: block; }
+          
+          .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 80px 20px 40px 20px !important;
+          }
+
+          .main-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 32px;
+          }
+
+          .main-header h2 {
+            font-size: 24px;
+          }
+
+          .main-header p {
+            font-size: 14px;
+          }
+
+          .btn-primary.btn-sm {
+            width: auto;
+          }
+
+          .creator-section {
+            padding: 0;
+          }
+
+          .input-group {
+            padding: 16px !important;
+          }
+
+          .linkedin-mockup.mobile {
+            width: 100%;
+          }
         }
       `}</style>
       <PWAPrompt />

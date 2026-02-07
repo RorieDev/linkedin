@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'LinkedIn Poster',
         short_name: 'LinkPoster',
         description: 'AI-powered LinkedIn post generator and scheduler',
-        theme_color: '#0a66c2',
+        theme_color: '#e11d48',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
