@@ -750,27 +750,21 @@ const App = () => {
       {/* Main Content */}
       <main className="main-content">
         <header className="main-header">
-          <div className="header-titles">
-            <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
-            <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
-          </div>
-          <div className="header-actions">
-            <button
-              onClick={toggleConnection}
-              className={`btn-primary btn-sm ${isConnected ? 'btn-connected' : ''}`}
-            >
-              {isConnected ? (
-                <>
-                  <CheckCircle2 size={14} />
-                  Connected
-                </>
-              ) : (
-                <>
-                  <Linkedin size={14} />
-                  Connect
-                </>
-              )}
-            </button>
+          <div className="header-column">
+            <div className="header-titles">
+              <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
+              <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
+            </div>
+            <div className="header-actions">
+              <button
+                onClick={toggleConnection}
+                className={`btn-connection-round ${isConnected ? 'connected' : ''}`}
+                title={isConnected ? "LinkedIn Connected" : "Connect LinkedIn"}
+              >
+                <Linkedin size={18} />
+                {isConnected && <div className="connection-badge" />}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -1142,23 +1136,27 @@ const App = () => {
           grid-template-columns: 480px 1fr;
           gap: 20px;
           margin-bottom: 20px;
+        }
+
+        .header-column {
+          grid-column: 1;
           position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 480px;
         }
 
         .header-titles {
-          grid-column: 1 / -1;
           text-align: center;
-          padding: 0 40px;
+          width: 100%;
         }
 
         .header-actions {
           position: absolute;
-          left: 480px;
-          top: 0;
-          transform: translateX(-100%);
-          display: flex;
-          align-items: center;
-          height: 100%;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
         }
 
         .main-header h2 {
@@ -1659,11 +1657,19 @@ const App = () => {
           }
 
           .main-header {
+            display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
             margin-bottom: 8px;
             position: relative;
+          }
+
+          .header-column {
+            width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
 
           .header-actions {
