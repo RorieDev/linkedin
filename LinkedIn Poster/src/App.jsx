@@ -762,27 +762,32 @@ const App = () => {
             >
               <Menu size={24} />
             </button>
+          </div>
 
+          <div className="header-titles top-bar-titles flex flex-col items-center justify-center gap-2">
+            <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
             <div
               className="user-profile header pointer"
               onClick={toggleConnection}
               title={isConnected ? "Click to disconnect" : "Click to connect LinkedIn"}
+              style={{
+                backgroundColor: isConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                border: isConnected ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                margin: '0 auto',
+                borderRadius: '50px',
+                padding: '4px 16px'
+              }}
             >
-              <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
+              <div className={`avatar ${isConnected ? 'active-border' : ''}`} style={{ width: 28, height: 28, fontSize: 12 }}>
                 {isConnected ? 'RD' : '?'}
               </div>
               <div className="user-info">
-                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-                <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
+                <p className="user-name" style={{ fontSize: 13 }}>{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className="user-status" style={{ fontSize: 10, color: isConnected ? '#22c55e' : '#999' }}>
                   {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="header-titles top-bar-titles">
-            <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
-            <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
           </div>
         </div>
 
@@ -833,17 +838,10 @@ const App = () => {
                   </div>
                 </div>
 
-                <div className="post-editor rounded-2xl p-6 mt-6">
-
+                <div className="post-editor rounded-2xl p-6 mt-6 pt-10">
 
                   <div className="relative">
-                    <textarea
-                      value={postContent}
-                      onChange={(e) => setPostContent(e.target.value)}
-                      placeholder=""
-                      className="content-textarea pt-12"
-                    />
-                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                    <div className="absolute top-2 left-0 right-0 flex justify-center gap-1 z-10">
                       <button onClick={copyToClipboard} className="btn-icon-label glass-button-obvious" title="Copy Post">
                         <Copy size={16} />
                       </button>
@@ -874,6 +872,12 @@ const App = () => {
                         </button>
                       )}
                     </div>
+                    <textarea
+                      value={postContent}
+                      onChange={(e) => setPostContent(e.target.value)}
+                      placeholder=""
+                      className="content-textarea pt-16"
+                    />
                   </div>
 
                   {postImage && (
