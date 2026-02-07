@@ -754,7 +754,7 @@ const App = () => {
 
       <main className="main-content full-width">
         <div className="top-left-controls">
-          <div className="flex items-center gap-5">
+          <div className="top-bar-nav flex items-center gap-5">
             <button
               className="hamburger-trigger"
               onClick={() => setIsSidebarOpen(true)}
@@ -763,7 +763,11 @@ const App = () => {
               <Menu size={24} />
             </button>
 
-            <div className="user-profile header">
+            <div
+              className="user-profile header pointer"
+              onClick={toggleConnection}
+              title={isConnected ? "Click to disconnect" : "Click to connect LinkedIn"}
+            >
               <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
                 {isConnected ? 'RD' : '?'}
               </div>
@@ -1123,7 +1127,17 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 8px;
+          padding: 8px 12px;
+          border-radius: 12px;
+          transition: background 0.2s;
+        }
+
+        .user-profile.pointer {
+          cursor: pointer;
+        }
+
+        .user-profile.pointer:hover {
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .avatar {
@@ -1658,131 +1672,92 @@ const App = () => {
         }
 
         @media (max-width: 850px) {
-          .mobile-top-bar { display: flex; }
+          .top-left-controls {
+            flex-direction: column-reverse;
+            gap: 16px;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 20px;
+          }
 
-          
+          .top-bar-nav {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+
+          .top-bar-titles {
+            position: static;
+            transform: none;
+            width: 100%;
+            text-align: center;
+            padding: 0 10px;
+          }
+
+          .top-bar-titles h2 {
+            font-size: 22px;
+            margin-bottom: 4px;
+          }
+
           .sidebar {
+            width: 100% !important;
             transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100% !important;
             background: var(--bg-dark);
-            justify-content: center;
-            align-items: center;
-            text-align: center;
           }
 
           .sidebar.open {
             transform: translateX(0);
           }
 
-          .sidebar-nav {
-            justify-content: center;
-            align-items: center;
-            flex: initial;
-          }
-
-          .mobile-close { display: block; }
-          
           .main-content {
-            margin-left: 0 !important;
-            width: 100% !important;
-            padding: 45px 12px 10px 12px !important;
-            text-align: center;
+            padding-top: 20px !important;
           }
-
-          .main-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 8px;
-            position: relative;
-          }
-
-          .header-column {
-            width: 100% !important;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .header-actions {
-            display: none; /* Already in top bar */
-          }
-
-          .header-titles {
-            text-align: left;
-            width: 100%;
-          }
-
-          .header-titles h2 {
-            font-size: 20px;
-            margin-bottom: 0;
-            text-align: left;
-          }
-
-          .btn-primary.btn-sm {
-            width: auto;
-            padding: 6px 16px;
-          }
-
           .creator-section {
             padding: 0;
+            margin-top: 10px;
           }
 
           .input-group {
-            padding: 10px !important;
+            padding: 15px !important;
+            border-radius: 12px !important;
           }
 
           .input-group label, .post-editor label {
             display: block;
             width: 100%;
-            text-align: center;
-            margin-bottom: 2px;
-            font-size: 13px;
+            text-align: left;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
           }
 
           .url-input, .topic-input, .content-textarea {
-            padding: 8px 12px !important;
-            font-size: 13px !important;
+            padding: 12px !important;
+            font-size: 14px !important;
+            text-align: left !important;
           }
 
           .topic-input {
-            min-height: 50px !important;
+            min-height: 80px !important;
           }
 
           .content-textarea {
-            min-height: 300px !important;
-          }
-
-          .mt-6 { margin-top: 8px !important; }
-          .mb-6 { margin-bottom: 8px !important; }
-          .mt-4 { margin-top: 6px !important; }
-          .mb-4 { margin-bottom: 6px !important; }
-
-          .preview-header {
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            min-height: 250px !important;
           }
 
           .publish-controls {
             flex-direction: column;
             width: 100%;
-            gap: 8px;
+            gap: 10px;
           }
 
           .publish-controls button {
             width: 100% !important;
           }
 
-          .linkedin-mockup.mobile {
-            width: 100%;
-          }
-          
-          .mockup-user {
-            text-align: left; /* Keep mockup content looking natural */
-          }
+          .mt-6, .mb-6 { margin: 12px 0 !important; }
         }
 
       `}</style>
