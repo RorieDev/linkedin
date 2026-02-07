@@ -195,12 +195,17 @@ LinkedIn Poster/
 
 ## Recent Updates
 
-- ✅ Sarcastic AI voice with dark humour
-- ✅ URL-based post generation
-- ✅ Telegram bot with confirmation flow
-- ✅ Auto-image generation with DALL-E-3
-- ✅ Deployed to Render
-- ✅ Supabase persistent storage
+- ✅ **Clean UI Theme** - Solid deep red background, no overlays or gradients
+- ✅ **Improved Spacing** - Reduced padding and margins to fit content above the fold
+- ✅ **White Input Fields** - High contrast white backgrounds with dark text
+- ✅ **Black Action Buttons** - All buttons now black except LinkedIn Connect (blue)
+- ✅ **Sarcastic AI Voice** - Dark humour and British wit
+- ✅ **URL-Based Generation** - Generate posts from article URLs
+- ✅ **Telegram Bot** - Full confirmation flow with inline buttons
+- ✅ **Auto-Image Generation** - DALL-E-3 powered images
+- ✅ **Deployed to Render** - Production ready at https://linkedin-sinj.onrender.com
+- ✅ **Supabase Storage** - Persistent tokens and scheduled posts
+- ✅ **PWA Support** - Install as mobile app
 
 ## Troubleshooting
 
