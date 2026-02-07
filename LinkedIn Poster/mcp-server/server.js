@@ -7,6 +7,7 @@ import https from 'https';
 import http from 'http';
 import cron from 'node-cron';
 import { createClient } from '@supabase/supabase-js';
+import { initTelegramBot } from './telegram-bot.js';
 
 dotenv.config();
 
@@ -168,7 +169,14 @@ async function initializeFromSupabase() {
   console.log('✓ Loaded from Supabase:', Object.keys(tokens).length, 'tokens,', Object.keys(scheduledPosts).length, 'scheduled posts');
 }
 
-initializeFromSupabase().catch(err => console.error('Failed to initialize from Supabase:', err.message));
+// Initialize Telegram bot
+let telegramBot = null;
+
+initializeFromSupabase()
+  .then(() => {
+    telegramBot = initTelegramBot(supabase, tokens, openai);
+  })
+  .catch(err => console.error('Failed to initialize:', err.message));
 
 function linkedinAuthUrl(state) {
   // Scopes: openid profile for reading user info, w_member_social for posting
@@ -240,10 +248,195 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     tokens[memberId] = tokenData;
     await saveToken(memberId, tokenData);
 
+    // Check if this is a Telegram OAuth callback
+    if (state && state.startsWith('telegram_')) {
+      const telegramId = parseInt(state.replace('telegram_', ''));
+
+      // Link Telegram user to LinkedIn member
+      if (supabase) {
+        try {
+          const { error: dbError } = await supabase
+            .from('telegram_users')
+            .upsert({
+              telegram_id: telegramId,
+              member_id: memberId,
+              active: true,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'telegram_id' });
+
+          if (dbError) {
+            console.error('Failed to save Telegram user mapping:', dbError.message);
+          } else {
+            console.log('✅ Linked Telegram user', telegramId, 'to LinkedIn member', memberId);
+
+            // Return success page for Telegram
+            return res.send(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <title>LinkedIn Connected</title>
+                <style>
+                  body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    background: linear-gradient(135deg, #0A66C2 0%, #004182 100%);
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                  }
+                  .container {
+                    max-width: 400px;
+                  }
+                  h1 { font-size: 48px; margin: 0 0 20px; }
+                  p { font-size: 18px; line-height: 1.6; }
+                  .emoji { font-size: 64px; margin-bottom: 20px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="emoji">✅</div>
+                  <h1>Success!</h1>
+                  <p>Your LinkedIn account is now connected to the Telegram bot.</p>
+                  <p>Return to Telegram and start sending topics to generate posts!</p>
+                </div>
+              </body>
+              </html>
+            `);
+          }
+        } catch (err) {
+          console.error('Error linking Telegram user:', err.message);
+        }
+      }
+    }
+
     res.json({ success: true, memberId });
   } catch (err) {
     console.error(err?.response?.data || err.message);
     res.status(500).json({ error: 'Token exchange or profile fetch failed' });
+  }
+});
+
+// Telegram OAuth callback - links Telegram user to LinkedIn member
+app.get('/auth/linkedin/callback/telegram/:telegramId', async (req, res) => {
+  console.log('=== TELEGRAM LINKEDIN OAUTH CALLBACK ===');
+  const { telegramId } = req.params;
+  const { code, state, error } = req.query;
+
+  if (error) return res.status(400).send(`OAuth error: ${error}`);
+  if (!code) return res.status(400).send('Missing authorization code');
+
+  try {
+    // Exchange code for token (same as regular OAuth)
+    const redirectUri = `${process.env.RENDER_API_URL || 'http://localhost:4000'}/auth/linkedin/callback/telegram/${telegramId}`;
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', redirectUri);
+    params.append('client_id', CLIENT_ID);
+    params.append('client_secret', CLIENT_SECRET);
+
+    const tokenResp = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', params.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const { access_token, expires_in, id_token } = tokenResp.data;
+
+    // Extract member ID (same logic as regular OAuth)
+    let memberId = null;
+    if (id_token) {
+      try {
+        const parts = id_token.split('.');
+        const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        memberId = decoded.sub || decoded.id;
+      } catch (e) {
+        console.log('Failed to decode id_token:', e.message);
+      }
+    }
+
+    if (!memberId) {
+      try {
+        const meResp = await axios.get('https://api.linkedin.com/v2/me', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        memberId = meResp.data.id;
+      } catch (err) {
+        const crypto = require('crypto');
+        memberId = 'li_' + crypto.createHash('sha256').update(access_token).digest('hex').substring(0, 16);
+      }
+    }
+
+    // Store token
+    const tokenData = {
+      access_token,
+      expires_at: Date.now() + (expires_in * 1000)
+    };
+    tokens[memberId] = tokenData;
+    await saveToken(memberId, tokenData);
+
+    // Link Telegram user to LinkedIn member
+    if (supabase) {
+      const { error: dbError } = await supabase
+        .from('telegram_users')
+        .upsert({
+          telegram_id: parseInt(telegramId),
+          member_id: memberId,
+          active: true,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'telegram_id' });
+
+      if (dbError) {
+        console.error('Failed to save Telegram user mapping:', dbError.message);
+      } else {
+        console.log('✅ Linked Telegram user', telegramId, 'to LinkedIn member', memberId);
+      }
+    }
+
+    // Send success page
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>LinkedIn Connected</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #0A66C2 0%, #004182 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+          }
+          .container {
+            max-width: 400px;
+          }
+          h1 { font-size: 48px; margin: 0 0 20px; }
+          p { font-size: 18px; line-height: 1.6; }
+          .emoji { font-size: 64px; margin-bottom: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="emoji">✅</div>
+          <h1>Success!</h1>
+          <p>Your LinkedIn account is now connected to the Telegram bot.</p>
+          <p>Return to Telegram and start sending topics to generate posts!</p>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('Telegram OAuth error:', err?.response?.data || err.message);
+    res.status(500).send(`Failed to connect: ${err.message}`);
   }
 });
 
