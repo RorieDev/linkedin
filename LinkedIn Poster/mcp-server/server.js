@@ -802,14 +802,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// TODO: Serve frontend static files from dist directory
-// const distPath = path.join(__dirname, '../dist');
-// if (fs.existsSync(distPath)) {
-//   app.use(express.static(distPath));
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.join(distPath, 'index.html'));
-//   });
-// }
+// Serve frontend static files from dist directory
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 console.log('🚀 About to listen on PORT:', PORT);
 app.listen(PORT, () => {
