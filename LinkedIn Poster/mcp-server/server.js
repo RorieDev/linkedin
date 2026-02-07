@@ -31,6 +31,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+console.log('🚀 Server starting...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Current directory:', process.cwd());
+
 const PORT = process.env.PORT || 4000;
 const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
