@@ -136,7 +136,7 @@ Posts are generated with:
 - **Length**: One paragraph max (150 words)
 - **Style**: Punches at corporate nonsense, genuine observations
 - **No engagement tactics**: No "What do you think?" or CTAs
-- **Emojis**: Only 🚨 at start and end
+- **Emojis**: Only 👀 at start (watching the madness unfold)
 
 Examples of topics it handles well:
 - "Why synergy is meaningless"

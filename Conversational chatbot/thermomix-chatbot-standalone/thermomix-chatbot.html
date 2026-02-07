@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermomix Chatbot</title>
+    <style>
+        /* Thermomix Chatbot Styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        .thermomix-chatbot-container {
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px 0;
+        }
+
+        .chatbot-widget {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            min-height: 300px;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .chatbot-header {
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chatbot-header h3 {
+            font-weight: 500;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .config-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.4);
+            color: #4A9EFF;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .config-btn:hover {
+            background: rgba(74, 158, 255, 0.3);
+            border-color: rgba(74, 158, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        .clear-chat-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 15px;
+            background: rgba(74, 158, 255, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.4);
+            color: #4A9EFF;
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+
+        .clear-chat-btn:hover {
+            background: rgba(74, 158, 255, 0.3);
+            border-color: rgba(74, 158, 255, 0.6);
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.2);
+        }
+
+        .clear-chat-btn svg {
+            stroke: #4A9EFF;
+            width: 28px;
+            height: 28px;
+        }
+
+        .config-panel {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+        }
+
+        .config-panel.active {
+            display: block;
+        }
+
+        .config-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(74, 158, 255, 0.3);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: white;
+            background: rgba(74, 158, 255, 0.1);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .api-key-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .api-key-input:focus {
+            border-color: #4A9EFF;
+            background: rgba(74, 158, 255, 0.15);
+        }
+
+        .config-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .config-save,
+        .config-cancel {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .config-save {
+            background: #4A9EFF;
+            color: white;
+        }
+
+        .config-save:hover {
+            background: #3a8eef;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(74, 158, 255, 0.3);
+        }
+
+        .config-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+        }
+
+        .config-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(74, 158, 255, 0.5);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            font-size: 15px;
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 400;
+            line-height: 1.4;
+            color: #7A7A7A;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #4A9EFF;
+            color: white;
+            border-radius: 15px 15px 5px 15px;
+        }
+
+        .message.assistant .message-content {
+            background: #f5f5f5;
+            border-radius: 15px 15px 15px 5px;
+        }
+
+        .typing-indicator {
+            display: none;
+            text-align: left;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots {
+            display: inline-block;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border-radius: 15px 15px 15px 5px;
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #7A7A7A;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            background: #ffffff;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            padding-left: 50px;
+            border: 2px solid #f0f0f0;
+            border-radius: 25px;
+            font-family: inherit;
+            font-size: 14px;
+            color: #7A7A7A;
+            background: #ffffff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #4A9EFF;
+        }
+
+        .chat-input.listening {
+            border-color: #4A9EFF;
+            background: rgba(74, 158, 255, 0.05);
+        }
+
+        .listening-indicator {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .listening-indicator.active {
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .listening-mic-icon {
+            width: 20px;
+            height: 20px;
+            fill: #4A9EFF;
+            animation: micPulse 1.5s infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.2);
+            }
+        }
+
+        .send-btn,
+        .mic-btn,
+        .stop-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: #4A9EFF;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .mic-icon,
+        .send-icon {
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            display: block;
+        }
+
+        .stop-btn {
+            background: #ff4757;
+            display: none;
+        }
+
+        .stop-btn.active {
+            display: flex;
+        }
+
+        .stop-icon {
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .send-btn:hover,
+        .mic-btn:hover {
+            background: #3a8eef;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+        }
+        
+        .stop-btn:hover {
+            background: #e63946;
+            transform: scale(1.05);
+        }
+
+        .stop-btn:hover {
+            background: #e63946;
+        }
+
+        .mic-btn.recording {
+            background: #4A9EFF;
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 0 0 rgba(74, 158, 255, 0.7);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(74, 158, 255, 0.7);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(74, 158, 255, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(74, 158, 255, 0);
+    }
+}
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chatbot-widget {
+                min-height: 250px;
+                max-height: 500px;
+                border-radius: 15px;
+            }
+
+            .chatbot-header {
+                padding: 15px;
+                border-radius: 15px 15px 0 0;
+            }
+
+            .chat-messages {
+                padding: 15px;
+            }
+
+            .chat-input-container {
+                padding: 15px;
+                border-radius: 0 0 15px 15px;
+            }
+
+            .message-content {
+                max-width: 90%;
+                font-size: 14px;
+            }
+            
+            .send-btn,
+            .mic-btn,
+            .stop-btn {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="thermomix-chatbot-container">
+        <div class="chatbot-widget" id="thermomixChatbot">
+            <div class="chatbot-header">
+                <button class="config-btn" id="configBtn" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px;">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                    </svg>
+                </button>
+                <h3>Thermomix Assistant</h3>
+                <button class="clear-chat-btn" id="clearChatBtn" title="Clear conversation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="config-panel" id="configPanel">
+                <label class="config-label">OpenAI API Key</label>
+                <input
+                    type="password"
+                    class="api-key-input"
+                    id="apiKeyInput"
+                    placeholder="sk-..."
+                />
+                <div class="config-actions">
+                    <button class="config-save" id="saveApiKeyBtn">Save</button>
+                    <button class="config-cancel" id="cancelConfigBtn">Cancel</button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-content">Hello! I'm your Thermomix assistant. How can I help you today? You can ask me about recipes, cooking techniques, settings, or anything Thermomix-related!</div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-row">
+                    <div class="listening-indicator" id="listeningIndicator">
+                        <svg class="listening-mic-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        class="chat-input"
+                        id="chatInput"
+                        placeholder="Type your message..."
+                    />
+                    <button class="mic-btn" id="micBtn" title="Voice input">
+                        <svg class="mic-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                        </svg>
+                    </button>
+                    <button class="send-btn" id="sendBtn" title="Send">
+                        <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                        </svg>
+                    </button>
+                    <button class="stop-btn" id="stopBtn" title="Stop">
+                        <svg class="stop-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 6h12v12H6z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // Configuration
+            const SYSTEM_PROMPT = `You are an expert Thermomix cooking assistant with deep knowledge of Thermomix TM5 and TM6 models. You help users with:
+- Recipes and cooking techniques
+- Temperature settings (Varoma, steaming, sous vide)
+- Speed settings (1-10, reverse, soft)
+- Cooking times and methods
+- Troubleshooting common issues
+- Adapting recipes for Thermomix
+- Cleaning and maintenance tips
+
+You provide clear, step-by-step instructions and can help adapt recipes for Thermomix. You're friendly, patient, and always helpful. Respond in the same language the user writes in.`;
+
+            // State
+            let isRecording = false;
+            let isProcessing = false;
+            let isSpeaking = false;
+            let isVoiceConversationActive = false;
+            let recognition = null;
+            let finalTranscript = '';
+            let interimTranscript = '';
+            let silenceTimer = null;
+            let abortController = null;
+            let lastSpeechEndTime = 0;
+            let availableVoices = [];
+            let speechSynthesisWarmedUp = false;
+            let conversationHistory = [];
+
+            // DOM Elements
+            const widget = document.getElementById('thermomixChatbot');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const micBtn = document.getElementById('micBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            const configBtn = document.getElementById('configBtn');
+            const configPanel = document.getElementById('configPanel');
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+            const cancelConfigBtn = document.getElementById('cancelConfigBtn');
+            const listeningIndicator = document.getElementById('listeningIndicator');
+
+            // Initialize
+            function init() {
+                loadVoices();
+                loadApiKey();
+                initializeSpeechRecognition();
+                setupEventListeners();
+                warmUpSpeechSynthesis();
+
+                // iOS warmup on first interaction
+                document.addEventListener('click', warmUpSpeechSynthesis, { once: true });
+                document.addEventListener('touchstart', warmUpSpeechSynthesis, { once: true });
+
+                // Android fix: Periodic check for stuck speaking state
+                setInterval(() => {
+                    if (isSpeaking && !window.speechSynthesis.speaking) {
+                        isSpeaking = false;
+                        updateUI();
+                    }
+                }, 500);
+            }
+
+            // Load voices
+            function loadVoices() {
+                availableVoices = window.speechSynthesis.getVoices();
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        availableVoices = window.speechSynthesis.getVoices();
+                    };
+                }
+            }
+
+            // Get voice by language
+            function getVoice(langOrName) {
+                if (availableVoices.length === 0) {
+                    availableVoices = window.speechSynthesis.getVoices();
+                }
+                let voice = availableVoices.find(v => v.name === langOrName);
+                if (!voice) {
+                    voice = availableVoices.find(v => v.lang === langOrName);
+                }
+                return voice || null;
+            }
+
+            // Warm up speech synthesis (iOS fix)
+            function warmUpSpeechSynthesis() {
+                if (speechSynthesisWarmedUp || !window.speechSynthesis) return;
+                const utterance = new SpeechSynthesisUtterance('');
+                utterance.volume = 0;
+                utterance.onend = () => { speechSynthesisWarmedUp = true; };
+                try {
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    speechSynthesisWarmedUp = true;
+                }
+            }
+
+            // Remove duplicate patterns (Android fix)
+            function removeDuplicatePatterns(text) {
+                if (!text || text.trim().length === 0) return text;
+                let words = text.trim().split(/\s+/);
+                const maxPatternLength = 8;
+                let changed = true;
+                let iterations = 0;
+
+                while (changed && iterations < 20) {
+                    iterations++;
+                    changed = false;
+                    const maxLen = Math.min(maxPatternLength, Math.floor(words.length / 2));
+
+                    outer: for (let patternLength = maxLen; patternLength >= 1; patternLength--) {
+                        for (let i = 0; i <= words.length - patternLength * 2; i++) {
+                            let match = true;
+                            for (let j = 0; j < patternLength; j++) {
+                                if (words[i + j].toLowerCase() !== words[i + patternLength + j].toLowerCase()) {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                words.splice(i + patternLength, patternLength);
+                                changed = true;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
+                return words.join(' ');
+            }
+
+            // Initialize speech recognition
+            function initializeSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognition = new SpeechRecognition();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'en-US';
+                    recognition.maxAlternatives = 1;
+
+                    recognition.onresult = (event) => {
+                        if (isSpeaking || window.speechSynthesis.speaking) return;
+
+                        const timeSinceSpeechEnd = Date.now() - lastSpeechEndTime;
+                        if (lastSpeechEndTime > 0 && timeSinceSpeechEnd < 3000) return;
+
+                        interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                if (transcript.trim()) {
+                                    const cleaned = removeDuplicatePatterns(transcript);
+                                    finalTranscript += cleaned + ' ';
+                                    if (silenceTimer) clearTimeout(silenceTimer);
+                                    silenceTimer = setTimeout(() => {
+                                        if (finalTranscript.trim() && !isProcessing) {
+                                            handleAutoSend(finalTranscript.trim());
+                                        }
+                                    }, 1000);
+                                }
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+
+                        const cleanFinal = removeDuplicatePatterns(finalTranscript);
+                        const cleanInterim = removeDuplicatePatterns(interimTranscript);
+                        if (chatInput && !isSpeaking) {
+                            chatInput.value = cleanFinal + cleanInterim;
+                        }
+                    };
+
+                    recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                            stopRecording();
+                        }
+                    };
+
+                    recognition.onend = () => {
+                        if (isRecording && !isProcessing) {
+                            try {
+                                recognition.start();
+                            } catch (e) {}
+                        } else {
+                            stopRecording();
+                        }
+                    };
+                }
+            }
+
+            // Speak text
+            function speakText(text) {
+                if (!window.speechSynthesis) return;
+
+                window.speechSynthesis.cancel();
+                isSpeaking = true;
+                updateUI();
+
+                const isArabic = /[\u0600-\u06FF]/.test(text);
+                const lang = isArabic ? 'ar-SA' : 'en-GB';
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voice = getVoice(lang);
+                if (voice) {
+                    utterance.voice = voice;
+                    utterance.lang = voice.lang;
+                } else {
+                    utterance.lang = lang;
+                }
+
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    lastSpeechEndTime = Date.now();
+                    updateUI();
+                };
+
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    lastSpeechEndTime = Date.now();
+                    updateUI();
+                };
+
+                try {
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    isSpeaking = false;
+                    updateUI();
+                }
+            }
+
+            // Add message to chat
+            function addMessage(content, role) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                messageDiv.innerHTML = `<div class="message-content">${escapeHtml(content)}</div>`;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                if (role === 'user' || role === 'assistant') {
+                    conversationHistory.push({ role, content });
+                }
+            }
+
+            // Escape HTML
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+
+            // Show typing indicator
+            function showTypingIndicator() {
+                const typing = document.createElement('div');
+                typing.className = 'typing-indicator active';
+                typing.id = 'typingIndicator';
+                typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+                chatMessages.appendChild(typing);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Hide typing indicator
+            function hideTypingIndicator() {
+                const typing = document.getElementById('typingIndicator');
+                if (typing) typing.remove();
+            }
+
+            // Get API key
+            function getApiKey() {
+                return apiKeyInput.value || localStorage.getItem('thermomix_chatbot_api_key') || '';
+            }
+
+            // Load API key
+            function loadApiKey() {
+                const saved = localStorage.getItem('thermomix_chatbot_api_key');
+                if (saved) {
+                    apiKeyInput.value = saved;
+                }
+            }
+
+            // Save API key
+            function saveApiKey() {
+                const key = apiKeyInput.value.trim();
+                if (key) {
+                    localStorage.setItem('thermomix_chatbot_api_key', key);
+                    configPanel.classList.remove('active');
+                }
+            }
+
+            // Call OpenAI API
+            async function callOpenAI(message) {
+                const apiKey = getApiKey();
+                if (!apiKey) {
+                    throw new Error('API key not configured');
+                }
+
+                abortController = new AbortController();
+
+                // Use Builder.io's API endpoint or direct OpenAI
+                // For Builder.io, you can set this in the component settings
+                const apiEndpoint = window.THERMOMIX_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
+
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [
+                            { role: 'system', content: SYSTEM_PROMPT },
+                            ...conversationHistory,
+                            { role: 'user', content: message }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    }),
+                    signal: abortController.signal
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Failed to get response');
+                }
+
+                const data = await response.json();
+                return data.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+            }
+
+            // Handle auto-send from voice
+            async function handleAutoSend(message) {
+                if (isProcessing) return;
+
+                isProcessing = true;
+                finalTranscript = '';
+                interimTranscript = '';
+                if (chatInput) chatInput.value = '';
+                updateUI();
+
+                addMessage(message, 'user');
+                showTypingIndicator();
+
+                try {
+                    const response = await callOpenAI(message);
+                    hideTypingIndicator();
+                    addMessage(response, 'assistant');
+
+                    if (isVoiceConversationActive) {
+                        speakText(response);
+                    }
+                } catch (error) {
+                    hideTypingIndicator();
+                    if (error.name !== 'AbortError') {
+                        const errorMsg = 'Sorry, I encountered an error. Please check your API key and try again.';
+                        addMessage(errorMsg, 'assistant');
+                        if (isVoiceConversationActive) {
+                            speakText(errorMsg);
+                        }
+                    }
+                } finally {
+                    isProcessing = false;
+                    updateUI();
+                }
+            }
+
+            // Send message
+            async function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message || isProcessing) return;
+
+                chatInput.value = '';
+                addMessage(message, 'user');
+                showTypingIndicator();
+                isProcessing = true;
+                updateUI();
+
+                try {
+                    const response = await callOpenAI(message);
+                    hideTypingIndicator();
+                    addMessage(response, 'assistant');
+                } catch (error) {
+                    hideTypingIndicator();
+                    if (error.name !== 'AbortError') {
+                        addMessage('Sorry, I encountered an error. Please check your API key and try again.', 'assistant');
+                    }
+                } finally {
+                    isProcessing = false;
+                    updateUI();
+                }
+            }
+
+            // Toggle recording
+            function toggleRecording() {
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    startRecording();
+                }
+            }
+
+            // Start recording
+            function startRecording() {
+                if (!recognition) {
+                    alert('Speech recognition is not supported in your browser.');
+                    return;
+                }
+
+                isRecording = true;
+                isVoiceConversationActive = true;
+                finalTranscript = '';
+                interimTranscript = '';
+                if (chatInput) chatInput.value = '';
+                updateUI();
+
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Failed to start recognition:', e);
+                    isRecording = false;
+                    updateUI();
+                }
+            }
+
+            // Stop recording
+            function stopRecording() {
+                if (recognition) {
+                    try {
+                        recognition.stop();
+                    } catch (e) {}
+                }
+                isRecording = false;
+                if (chatInput) chatInput.value = '';
+                interimTranscript = '';
+                finalTranscript = '';
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+                updateUI();
+            }
+
+            // Cancel recording
+            function cancelRecording() {
+                stopRecording();
+                isVoiceConversationActive = false;
+                if (abortController) {
+                    abortController.abort();
+                }
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                }
+                isSpeaking = false;
+                isProcessing = false;
+                hideTypingIndicator();
+                updateUI();
+            }
+
+            // Clear conversation
+            function clearConversation() {
+                chatMessages.innerHTML = '<div class="message assistant"><div class="message-content">Hello! I\'m your Thermomix assistant. How can I help you today? You can ask me about recipes, cooking techniques, settings, or anything Thermomix-related!</div></div>';
+                conversationHistory = [];
+                cancelRecording();
+            }
+
+            // Update UI
+            function updateUI() {
+                if (isRecording) {
+                    micBtn.classList.add('recording');
+                    listeningIndicator.classList.add('active');
+                    chatInput.classList.add('listening');
+                    micBtn.style.display = 'flex';
+                    sendBtn.style.display = 'none';
+                    stopBtn.style.display = 'none';
+                } else if (isVoiceConversationActive && !isProcessing) {
+                    micBtn.classList.remove('recording');
+                    listeningIndicator.classList.remove('active');
+                    chatInput.classList.remove('listening');
+                    micBtn.style.display = 'none';
+                    sendBtn.style.display = 'none';
+                    stopBtn.classList.add('active');
+                    stopBtn.style.display = 'flex';
+                } else {
+                    micBtn.classList.remove('recording');
+                    listeningIndicator.classList.remove('active');
+                    chatInput.classList.remove('listening');
+                    micBtn.style.display = 'flex';
+                    sendBtn.style.display = 'flex';
+                    stopBtn.classList.remove('active');
+                    stopBtn.style.display = 'none';
+                }
+            }
+
+            // Setup event listeners
+            function setupEventListeners() {
+                sendBtn.addEventListener('click', sendMessage);
+                micBtn.addEventListener('click', toggleRecording);
+                stopBtn.addEventListener('click', cancelRecording);
+                clearChatBtn.addEventListener('click', clearConversation);
+                configBtn.addEventListener('click', () => {
+                    configPanel.classList.toggle('active');
+                });
+                saveApiKeyBtn.addEventListener('click', saveApiKey);
+                cancelConfigBtn.addEventListener('click', () => {
+                    configPanel.classList.remove('active');
+                });
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+
+            // Initialize on load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
+

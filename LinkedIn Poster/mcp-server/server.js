@@ -484,10 +484,10 @@ TONE: Sardonic mate, British wit, eye-rolling at corporate culture, genuinely be
 
 CONSTRAINTS:
 - ONE sharp paragraph max (150 words)
-- Start & end with 🚨
+- Start with 👀 only (no emoji at end)
 - Sarcasm not sappiness
 - No engagement fishing
-- Only 🚨 as emoji
+- Only 👀 as emoji (at start)
 - Absolutely roast the topic if warranted
 
 CRITICAL: Write EXACTLY about what they asked. No substitutions.`

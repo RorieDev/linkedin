@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap');
+
+/* Custom scrollbar styles for Investing Copilot */
+/* Import Work Sans font */
+/* Apply Work Sans to all elements */
+#investing-copilot-root * {
+  font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+/* Force scrollbar to always be visible */
+#investing-copilot-root .overflow-y-scroll {
+  overflow-y: scroll !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #FC6481 #ffffff !important;
+}
+#investing-copilot-root ::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
+}
+#investing-copilot-root ::-webkit-scrollbar-track {
+  background: #ffffff !important;
+  border-radius: 4px !important;
+}
+#investing-copilot-root ::-webkit-scrollbar-thumb {
+  background: #FC6481 !important;
+  border-radius: 4px !important;
+  min-height: 40px !important;
+}
+#investing-copilot-root ::-webkit-scrollbar-thumb:hover {
+  background: #e5566f !important;
+}
+/* Firefox scrollbar */
+#investing-copilot-root * {
+  scrollbar-width: thin !important;
+  scrollbar-color: #FC6481 #ffffff !important;
+}
+/* Force scrollbar to always show on macOS */
+#investing-copilot-root .overflow-y-scroll::-webkit-scrollbar {
+  -webkit-appearance: none !important;
+  width: 12px !important;
+}
+#investing-copilot-root .overflow-y-scroll::-webkit-scrollbar-thumb {
+  background-color: #FC6481 !important;
+  border-radius: 4px !important;
+  border: 2px solid #ffffff !important;
+}
+

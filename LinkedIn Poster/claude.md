@@ -41,7 +41,7 @@ Posts are generated with:
 - **Tone**: Sarcastic, British wit, dark humour
 - **Length**: One paragraph max (150 words)
 - **Style**: Punches corporate nonsense, genuine observations
-- **Emojis**: Only 🚨 at start and end
+- **Emojis**: Only 👀 at start (watching the madness)
 - **Language**: British English (colour, organisation, realise, etc.)
 - **No engagement tactics**: No "What do you think?" or CTAs
 - **Roasts**: Absolutely dismisses buzzwords like "synergy" and "hustle culture"
@@ -57,7 +57,7 @@ Located in:
 - `mcp-server/server.js` - Web UI generation
 - `mcp-server/telegram-bot.js` (lines 106-132) - Telegram bot generation
 
-Both enforce sarcastic tone with dark humour, 150-word max, and 🚨 bookends.
+Both enforce sarcastic tone with dark humour, 150-word max, and 👀 at the start.
 
 ## Getting Started
 
