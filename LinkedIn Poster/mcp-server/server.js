@@ -782,11 +782,25 @@ cron.schedule('* * * * *', async () => {
 
 // Serve frontend static files from dist directory
 const distPath = path.join(__dirname, '../dist');
-app.use(express.static(distPath));
+const fs = require('fs');
 
-// SPA fallback: serve index.html for all unmatched routes (client-side routing)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
+console.log('📁 Checking for dist folder at:', distPath);
+if (fs.existsSync(distPath)) {
+  console.log('✅ dist folder found, serving static files');
+  app.use(express.static(distPath));
+
+  // SPA fallback: serve index.html for all unmatched routes (client-side routing)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  console.warn('⚠️  dist folder NOT found at:', distPath);
+  console.warn('Frontend will not be served. Ensure npm run build was executed during Render build.');
+
+  // Fallback 404 for missing frontend
+  app.get('*', (req, res) => {
+    res.status(404).json({ error: 'Frontend not found. Build may have failed.' });
+  });
+}
 
 app.listen(PORT, () => console.log(`LinkedIn MCP server running on http://localhost:${PORT}`));
