@@ -782,6 +782,7 @@ const App = () => {
                       onClick={generatePost}
                       disabled={isGenerating || (!topic && !sourceUrl)}
                       className={`btn-generate ${isGenerating ? 'loading' : ''}`}
+                      style={{ backgroundColor: '#000000' }}
                     >
                       {isGenerating ? (
                         <div className="spinner"></div>
@@ -1242,8 +1243,8 @@ const App = () => {
         }
 
         .btn-generate {
-          background: #000000;
-          color: white;
+          background: #000000 !important;
+          color: white !important;
           padding: 12px 24px;
           border-radius: 12px;
           font-weight: 700;
