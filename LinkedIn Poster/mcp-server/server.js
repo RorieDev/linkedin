@@ -6,10 +6,16 @@ import { OpenAI } from 'openai';
 import https from 'https';
 import http from 'http';
 import cron from 'node-cron';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import { initTelegramBot } from './telegram-bot.js';
 
 dotenv.config();
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -772,6 +778,15 @@ cron.schedule('* * * * *', async () => {
       }
     }
   }
+});
+
+// Serve frontend static files from dist directory
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
+
+// SPA fallback: serve index.html for all unmatched routes (client-side routing)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`LinkedIn MCP server running on http://localhost:${PORT}`));
