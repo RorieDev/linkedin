@@ -912,73 +912,78 @@ const App = () => {
                         e.preventDefault();
                         setIsScheduleModalOpen(true);
                       }}
+                      disabled={!postContent}
+                      type="button"
+                    >
+                      <Calendar size={18} />
+                      Schedule
                     </button>
-                </div>
-                {!isConnected && postContent && (
-                  <p className="text-xs text-center mt-2 text-primary">Connect your LinkedIn to post directly</p>
-                )}
-            </div>
-              </motion.div>
-    </div>
-  ) : activeTab === 'history' ? (
-    <div className="history-list full-width">
-      {history.map(item => (
-        <div key={item.id} className="history-item">
-          <div className="history-content">
-            <div className="history-meta">
-              <span className="history-date">{item.date}</span>
-              <div className="history-actions">
-                <button className="btn-icon" onClick={() => {
-                  navigator.clipboard.writeText(item.content);
-                  setShowToast(true);
-                  setTimeout(() => setShowToast(false), 3000);
-                }}><Copy size={16} /></button>
-                <button className="btn-icon text-red-500"><Trash2 size={16} /></button>
-              </div>
-            </div>
-            <p>{item.content}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : activeTab === 'schedule' ? (
-    <div className="history-list full-width">
-      {scheduledPosts.length === 0 ? (
-        <div className="placeholder-content" style={{ textAlign: 'center', padding: '48px' }}>
-          <Calendar size={48} className="text-muted mb-4" />
-          <h3>No scheduled posts</h3>
-          <p className="text-muted">Create a post and click Schedule to plan ahead</p>
-        </div>
-      ) : (
-        scheduledPosts.map(post => (
-          <div key={post.id} className="history-item">
-            <div className="history-content">
-              <div className="history-meta">
-                <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
-                <div className="history-actions">
-                  <span className={`status-badge ${post.status}`}>{post.status}</span>
-                  {post.status === 'scheduled' && (
-                    <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)}>
-                      <Trash2 size={16} />
-                    </button>
+                  </div>
+                  {!isConnected && postContent && (
+                    <p className="text-xs text-center mt-2 text-primary">Connect your LinkedIn to post directly</p>
                   )}
                 </div>
-              </div>
-              <p>{post.message.substring(0, 100)}...</p>
-              {post.imageUrl && <p className="text-xs text-muted mt-2">📸 Image attached</p>}
+              </motion.div>
             </div>
-          </div>
-        ))
-      )}
-    </div>
-  ) : (
-    <div className="placeholder-content full-width">
-      <Settings size={48} className="text-muted mb-4" />
-      <h3>Tab coming soon</h3>
-      <p className="text-muted">We are working on the {activeTab} functionality.</p>
-    </div>
-  )
-}
+          ) : activeTab === 'history' ? (
+            <div className="history-list full-width">
+              {history.map(item => (
+                <div key={item.id} className="history-item">
+                  <div className="history-content">
+                    <div className="history-meta">
+                      <span className="history-date">{item.date}</span>
+                      <div className="history-actions">
+                        <button className="btn-icon" onClick={() => {
+                          navigator.clipboard.writeText(item.content);
+                          setShowToast(true);
+                          setTimeout(() => setShowToast(false), 3000);
+                        }}><Copy size={16} /></button>
+                        <button className="btn-icon text-red-500"><Trash2 size={16} /></button>
+                      </div>
+                    </div>
+                    <p>{item.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activeTab === 'schedule' ? (
+            <div className="history-list full-width">
+              {scheduledPosts.length === 0 ? (
+                <div className="placeholder-content" style={{ textAlign: 'center', padding: '48px' }}>
+                  <Calendar size={48} className="text-muted mb-4" />
+                  <h3>No scheduled posts</h3>
+                  <p className="text-muted">Create a post and click Schedule to plan ahead</p>
+                </div>
+              ) : (
+                scheduledPosts.map(post => (
+                  <div key={post.id} className="history-item">
+                    <div className="history-content">
+                      <div className="history-meta">
+                        <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
+                        <div className="history-actions">
+                          <span className={`status-badge ${post.status}`}>{post.status}</span>
+                          {post.status === 'scheduled' && (
+                            <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)}>
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p>{post.message.substring(0, 100)}...</p>
+                      {post.imageUrl && <p className="text-xs text-muted mt-2">📸 Image attached</p>}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            <div className="placeholder-content full-width">
+              <Settings size={48} className="text-muted mb-4" />
+              <h3>Tab coming soon</h3>
+              <p className="text-muted">We are working on the {activeTab} functionality.</p>
+            </div>
+          )
+          }
         </div >
       </main >
 
