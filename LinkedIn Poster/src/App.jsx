@@ -1026,7 +1026,7 @@ const App = () => {
           flex-direction: column;
           position: fixed;
           height: 100vh;
-          background: #080808;
+          background: #310404;
           z-index: 100;
         }
 
@@ -1507,7 +1507,7 @@ const App = () => {
           left: 0;
           right: 0;
           height: 60px;
-          background: rgba(5, 5, 5, 0.8);
+          background: rgba(49, 4, 4, 0.8);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid var(--card-border);
           z-index: 1500;
@@ -1550,7 +1550,7 @@ const App = () => {
             transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100% !important;
-            background: rgba(5, 5, 5, 0.98);
+            background: rgba(49, 4, 4, 0.98);
             backdrop-filter: blur(20px);
             justify-content: center;
             align-items: center;
