@@ -765,7 +765,7 @@ const App = () => {
           </div>
 
           <div className="header-titles top-bar-titles flex flex-col items-center justify-center gap-2">
-            <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
+
             <div
               className="user-profile header pointer"
               onClick={toggleConnection}
@@ -775,7 +775,9 @@ const App = () => {
                 border: isConnected ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
                 margin: '0 auto',
                 borderRadius: '50px',
-                padding: '4px 16px'
+                padding: '4px 16px',
+                pointerEvents: 'auto',
+                cursor: 'pointer'
               }}
             >
               <div className={`avatar ${isConnected ? 'active-border' : ''}`} style={{ width: 28, height: 28, fontSize: 12 }}>
