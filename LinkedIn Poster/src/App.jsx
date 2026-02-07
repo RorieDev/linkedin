@@ -1112,7 +1112,7 @@ const App = () => {
         .main-content {
           margin-left: var(--sidebar-width);
           flex: 1;
-          padding: 40px;
+          padding: 20px 40px;
           max-width: 1400px;
           width: calc(100% - var(--sidebar-width));
         }
@@ -1121,7 +1121,7 @@ const App = () => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 40px;
+          margin-bottom: 20px;
         }
 
         .main-header h2 {
@@ -1138,7 +1138,7 @@ const App = () => {
         .content-grid {
           display: grid;
           grid-template-columns: 480px 1fr;
-          gap: 32px;
+          gap: 20px;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
@@ -1175,12 +1175,12 @@ const App = () => {
           background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
-          padding: 16px;
+          padding: 12px;
           color: #333333;
-          min-height: 100px;
+          min-height: 70px;
           resize: none;
-          font-size: 15px;
-          margin-top: 12px;
+          font-size: 14px;
+          margin-top: 8px;
           transition: border-color 0.2s;
         }
 
@@ -1193,12 +1193,12 @@ const App = () => {
           background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
-          padding: 16px;
+          padding: 12px;
           color: #333333;
-          min-height: 250px;
+          min-height: 150px;
           resize: vertical;
-          font-size: 15px;
-          line-height: 1.6;
+          font-size: 14px;
+          line-height: 1.5;
         }
 
         /* Buttons */
@@ -1453,11 +1453,20 @@ const App = () => {
         .justify-between { justify-content: space-between; }
         .gap-2 { gap: 8px; }
         .gap-3 { gap: 12px; }
-        .p-6 { padding: 24px; }
-        .mt-4 { margin-top: 16px; }
-        .mt-6 { margin-top: 24px; }
-        .mb-4 { margin-bottom: 16px; }
-        .mb-6 { margin-bottom: 24px; }
+        .p-6 { padding: 16px; }
+        .mt-4 { margin-top: 8px; }
+        .mt-6 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 8px; }
+        .mb-6 { margin-bottom: 16px; }
+        .rounded-2xl { border-radius: 16px; }
+        
+        .input-group {
+          background: transparent !important;
+        }
+        
+        .post-editor {
+          background: transparent !important;
+        }
         .text-xs { font-size: 12px; }
         .font-medium { font-weight: 500; }
         .flex-1 { flex: 1; }
