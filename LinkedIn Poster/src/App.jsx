@@ -834,9 +834,7 @@ const App = () => {
                 </div>
 
                 <div className="post-editor rounded-2xl p-6 mt-6">
-                  <div className="flex justify-center items-center mb-4">
-                    <label className="m-0 text-center w-full">Generated Post</label>
-                  </div>
+
 
                   <div className="relative">
                     <textarea
