@@ -1155,8 +1155,10 @@ const App = () => {
         .header-actions {
           position: absolute;
           right: 0;
-          top: 50%;
-          transform: translateY(-50%);
+          top: 0;
+          height: 38px; /* Matches h2 height area roughly */
+          display: flex;
+          align-items: center;
         }
 
         .main-header h2 {
@@ -1716,7 +1718,7 @@ const App = () => {
           }
 
           .content-textarea {
-            min-height: 200px !important;
+            min-height: 300px !important;
           }
 
           .mt-6 { margin-top: 8px !important; }
