@@ -1,10 +1,10 @@
 services:
-  # Backend API Service
+  # Unified Backend + Frontend Service
   - type: web
     name: linkedin-poster-api
     runtime: node
     plan: free
-    buildCommand: cd mcp-server && npm install
+    buildCommand: npm install && npm run build && cd mcp-server && npm install
     startCommand: cd mcp-server && npm start
     envVars:
       - key: PORT
@@ -25,12 +25,5 @@ services:
         sync: false
       - key: RENDER_API_URL
         value: https://linkedin-poster-api.onrender.com
-
-  # Frontend Static Site
-  - type: static_site
-    name: linkedin-poster-web
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
       - key: VITE_API_URL
         value: https://linkedin-poster-api.onrender.com
