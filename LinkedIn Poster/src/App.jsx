@@ -1202,7 +1202,7 @@ const App = () => {
           border-radius: 12px;
           padding: 12px;
           color: #333333;
-          min-height: 150px;
+          min-height: 300px;
           resize: vertical;
           font-size: 14px;
           line-height: 1.5;
@@ -1636,7 +1636,7 @@ const App = () => {
           }
 
           .content-textarea {
-            min-height: 100px !important;
+            min-height: 200px !important;
           }
 
           .mt-6 { margin-top: 8px !important; }
