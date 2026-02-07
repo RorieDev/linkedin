@@ -4,7 +4,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 function PWAPrompt() {
     const {
         offlineReady: [offlineReady, setOfflineReady],
-        needUpdate: [needUpdate, setNeedUpdate],
+        needRefresh: [needRefresh, setNeedRefresh],
         updateServiceWorker,
     } = useRegisterSW({
         onRegistered(r) {
@@ -17,10 +17,11 @@ function PWAPrompt() {
 
     const close = () => {
         setOfflineReady(false);
-        setNeedUpdate(false);
+        setNeedRefresh(false);
     };
 
-    if (!offlineReady && !needUpdate) return null;
+    if (!offlineReady && !needRefresh) return null;
+
 
     return (
         <div className="pwa-toast" style={{
@@ -48,9 +49,10 @@ function PWAPrompt() {
                 )}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-                {needUpdate && (
+                {needRefresh && (
                     <button
                         onClick={() => updateServiceWorker(true)}
+
                         style={{
                             padding: '8px 16px',
                             borderRadius: '6px',
