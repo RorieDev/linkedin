@@ -1540,7 +1540,9 @@ const App = () => {
         }
 
         @media (max-width: 850px) {
+          .preview-section { display: none; }
           .mobile-top-bar { display: flex; }
+
           
           .sidebar {
             transform: translateX(-100%);
