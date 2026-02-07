@@ -803,15 +803,15 @@ const App = () => {
                         type="url"
                         value={sourceUrl}
                         onChange={(e) => setSourceUrl(e.target.value)}
-                        placeholder="Paste source URL (blog, news, etc.)"
+                        placeholder=""
                         className="url-input"
                       />
                     </div>
-                    <label>What's on your mind?</label>
+                    <label>Write a post about...</label>
                     <textarea
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
-                      placeholder="e.g. Write a post about why building in public is important for founders..."
+                      placeholder=""
                       className="topic-input"
                     />
                   </div>
@@ -860,7 +860,7 @@ const App = () => {
                   <textarea
                     value={postContent}
                     onChange={(e) => setPostContent(e.target.value)}
-                    placeholder="Your generated post will appear here..."
+                    placeholder=""
                     className="content-textarea"
                   />
 
