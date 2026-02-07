@@ -912,12 +912,6 @@ const App = () => {
                       <p className="text-muted italic">Start generating to see how your post looks on LinkedIn...</p>
                     )}
                   </div>
-                  <div className="mockup-stats">
-                    <div className="stat-icons">
-                      <div className="mini-icon blue"><ThumbsUp size={10} fill="white" /></div>
-                      <span>0 engagement</span>
-                    </div>
-                  </div>
                   <div className="mockup-actions">
                     <button><ThumbsUp size={18} /> Like</button>
                     <button><MessageSquare size={18} /> Comment</button>
