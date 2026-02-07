@@ -1573,21 +1573,20 @@ const App = () => {
             margin-left: 0 !important;
             width: 100% !important;
             padding: 80px 20px 40px 20px !important;
+            text-align: center;
           }
 
           .main-header {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             gap: 16px;
             margin-bottom: 32px;
           }
 
-          .main-header h2 {
-            font-size: 24px;
-          }
-
-          .main-header p {
-            font-size: 14px;
+          .header-titles {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
 
           .btn-primary.btn-sm {
@@ -1602,10 +1601,37 @@ const App = () => {
             padding: 16px !important;
           }
 
+          .input-group label, .post-editor label {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 8px;
+          }
+
+          .preview-header {
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+          }
+
+          .publish-controls {
+            flex-direction: column;
+            width: 100%;
+          }
+
+          .publish-controls button {
+            width: 100% !important;
+          }
+
           .linkedin-mockup.mobile {
             width: 100%;
           }
+          
+          .mockup-user {
+            text-align: left; /* Keep mockup content looking natural */
+          }
         }
+
       `}</style>
       <PWAPrompt />
     </div>
