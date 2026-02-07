@@ -344,7 +344,7 @@ const App = () => {
   };
 
   const generateImage = async () => {
-    if (!topic) return;
+    if (!topic && !sourceUrl) return;
     setIsGeneratingImage(true);
 
     try {
