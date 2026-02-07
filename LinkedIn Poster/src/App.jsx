@@ -663,10 +663,21 @@ const App = () => {
       </AnimatePresence>
 
       <header className="mobile-top-bar">
+        <div style={{ width: 80 }}></div> {/* Spacer to balance */}
         <button className="mobile-menu-trigger" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
           <span>Menu</span>
         </button>
+        <div className="flex justify-end" style={{ width: 80, paddingRight: 12 }}>
+          <button
+            onClick={toggleConnection}
+            className={`btn-connection-round ${isConnected ? 'connected' : ''}`}
+            title={isConnected ? "LinkedIn Connected" : "Connect LinkedIn"}
+          >
+            <Linkedin size={18} />
+            {isConnected && <div className="connection-badge" />}
+          </button>
+        </div>
       </header>
 
       {/* Sidebar */}
@@ -743,22 +754,24 @@ const App = () => {
             <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
             <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
           </div>
-          <button
-            onClick={toggleConnection}
-            className={`btn-primary btn-sm ${isConnected ? 'btn-connected' : ''}`}
-          >
-            {isConnected ? (
-              <>
-                <CheckCircle2 size={14} />
-                Connected
-              </>
-            ) : (
-              <>
-                <Linkedin size={14} />
-                Connect
-              </>
-            )}
-          </button>
+          <div className="header-actions">
+            <button
+              onClick={toggleConnection}
+              className={`btn-primary btn-sm ${isConnected ? 'btn-connected' : ''}`}
+            >
+              {isConnected ? (
+                <>
+                  <CheckCircle2 size={14} />
+                  Connected
+                </>
+              ) : (
+                <>
+                  <Linkedin size={14} />
+                  Connect
+                </>
+              )}
+            </button>
+          </div>
         </header>
 
         <div className="content-grid">
@@ -1125,16 +1138,34 @@ const App = () => {
         }
 
         .main-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
+          display: grid;
+          grid-template-columns: 480px 1fr;
+          gap: 20px;
           margin-bottom: 20px;
+          position: relative;
+        }
+
+        .header-titles {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 0 40px;
+        }
+
+        .header-actions {
+          position: absolute;
+          left: 480px;
+          top: 0;
+          transform: translateX(-100%);
+          display: flex;
+          align-items: center;
+          height: 100%;
         }
 
         .main-header h2 {
           font-family: var(--font-display);
           font-size: 28px;
           margin-bottom: 4px;
+          text-align: center;
         }
 
         .text-muted {
@@ -1195,18 +1226,21 @@ const App = () => {
           border-color: var(--primary);
         }
 
-        .content-textarea {
+        .url-input, .topic-input, .content-textarea {
           width: 100%;
           background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
           padding: 12px;
           color: #333333;
-          min-height: 300px;
           resize: vertical;
           font-size: 14px;
           line-height: 1.5;
+          text-align: center;
         }
+
+        .topic-input { min-height: 70px; }
+        .content-textarea { min-height: 300px; }
 
         /* Buttons */
         .btn-primary {
@@ -1467,17 +1501,52 @@ const App = () => {
         .mb-6 { margin-bottom: 16px; }
         .rounded-2xl { border-radius: 16px; }
         
-        .input-group {
+        .input-group, .post-editor {
           background: transparent !important;
         }
-        
-        .post-editor {
-          background: transparent !important;
+
+        .input-group label, .post-editor label {
+          display: block;
+          width: 100%;
+          text-align: center;
+          margin-bottom: 8px;
+          font-weight: 500;
         }
         .text-xs { font-size: 12px; }
         .font-medium { font-weight: 500; }
         .flex-1 { flex: 1; }
         .full-width { grid-column: 1 / -1; }
+
+        .btn-connection-round {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #000000;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          border: 1px solid rgba(255,255,255,0.1);
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .btn-connection-round.connected {
+          background: #0A66C2;
+          border-color: #0A66C2;
+        }
+
+        .connection-badge {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 10px;
+          height: 10px;
+          background: #22c55e;
+          border-radius: 50%;
+          border: 2px solid var(--bg-dark);
+        }
 
         .status-badge {
           display: inline-block;
@@ -1594,6 +1663,11 @@ const App = () => {
             align-items: center;
             gap: 4px;
             margin-bottom: 8px;
+            position: relative;
+          }
+
+          .header-actions {
+            display: none; /* Already in top bar */
           }
 
           .header-titles p {
