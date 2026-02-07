@@ -3,7 +3,7 @@
 :root {
   --primary: #e11d48;
   --primary-hover: #be123c;
-  --bg-dark: #000000;
+  --bg-dark: #e11d48;
   --card-bg: transparent;
   --card-border: transparent;
   --text-main: #ffffff;

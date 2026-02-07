@@ -1628,9 +1628,11 @@ const App = () => {
           background: rgba(0, 0, 0, 0.1);
         }
         /* Placeholder styling */
+        /* Placeholder styling */
         input::placeholder, textarea::placeholder {
           color: #999;
           font-weight: 400;
+          text-align: center;
         }
 
         .glass-button-obvious {
@@ -1756,10 +1758,10 @@ const App = () => {
         @media (max-width: 850px) {
           .top-left-controls {
             flex-direction: column-reverse;
-            gap: 16px;
-            padding: 15px 0;
+            gap: 8px;
+            padding: 5px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            margin-bottom: 20px;
+            margin-bottom: 5px;
           }
 
           .top-bar-nav {
@@ -1794,7 +1796,7 @@ const App = () => {
           }
 
           .main-content {
-            padding-top: 20px !important;
+            padding-top: 5px !important;
           }
           .creator-section {
             padding: 0;
