@@ -28,17 +28,16 @@ import PWAPrompt from './components/PWAPrompt';
 // API URL - use environment variable in production, localhost in development
 const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? window.location.origin : 'http://localhost:4000');
 
-const SidebarItem = ({ icon: Icon, label, active, onClick, isCollapsed }) => (
+const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
   <motion.div
-    whileHover={{ x: isCollapsed ? 0 : 5 }}
+    whileHover={{ x: 5 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors ${active ? 'bg-primary text-white' : 'hover:bg-glass text-text-muted hover:text-white'
-      } ${isCollapsed ? 'justify-center px-1' : ''}`}
-    title={isCollapsed ? label : ''}
+      }`}
   >
     <Icon size={20} />
-    {!isCollapsed && <span className="font-medium">{label}</span>}
+    <span className="font-medium">{label}</span>
   </motion.div>
 );
 
@@ -278,7 +277,6 @@ const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
 const App = () => {
   const [activeTab, setActiveTab] = useState('creator');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [postContent, setPostContent] = useState('');
   const [postImage, setPostImage] = useState('');
   const [topic, setTopic] = useState('');
@@ -664,126 +662,127 @@ const App = () => {
         )}
       </AnimatePresence>
 
-      <header className="mobile-top-bar">
-        <div style={{ width: 80 }}></div> {/* Spacer to balance */}
-        <button className="mobile-menu-trigger" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          <span>Menu</span>
-        </button>
-        <div className="flex justify-end" style={{ width: 80, paddingRight: 12 }}>
-          <button
-            onClick={toggleConnection}
-            className={`btn-connection-round ${isConnected ? 'connected' : ''}`}
-            title={isConnected ? "LinkedIn Connected" : "Connect LinkedIn"}
-          >
-            <Linkedin size={18} />
-            {isConnected && <div className="connection-badge" />}
+      <div style={{ display: 'none' }}>
+        <header className="mobile-top-bar">
+          <div style={{ width: 80 }}></div> {/* Spacer to balance */}
+          <button className="mobile-menu-trigger" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            <span>Menu</span>
           </button>
-        </div>
-      </header>
+          <div className="flex justify-end" style={{ width: 80, paddingRight: 12 }}>
+            <button
+              onClick={toggleConnection}
+              className={`btn-connection-round ${isConnected ? 'connected' : ''}`}
+              title={isConnected ? "LinkedIn Connected" : "Connect LinkedIn"}
+            >
+              <Linkedin size={18} />
+              {isConnected && <div className="connection-badge" />}
+            </button>
+          </div>
+        </header>
+      </div>
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-        <div className="mobile-close" onClick={() => setIsSidebarOpen(false)}>
-          <X size={24} />
-        </div>
-        <div className="sidebar-header-new">
+      {/* Sidebar Overlay */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="sidebar-overlay"
+              style={{ zIndex: 1999 }}
+              onClick={() => setIsSidebarOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="sidebar open"
+              style={{ zIndex: 2000 }}
+            >
+              <div className="sidebar-header-internal">
+                <button className="close-menu" onClick={() => setIsSidebarOpen(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+
+              <nav className="sidebar-nav">
+                <SidebarItem
+                  icon={Plus}
+                  label="Create Post"
+                  active={activeTab === 'creator'}
+                  onClick={() => {
+                    setActiveTab('creator');
+                    setIsSidebarOpen(false);
+                  }}
+                />
+                <SidebarItem
+                  icon={History}
+                  label="History"
+                  active={activeTab === 'history'}
+                  onClick={() => {
+                    setActiveTab('history');
+                    setIsSidebarOpen(false);
+                  }}
+                />
+                <SidebarItem
+                  icon={Calendar}
+                  label="Schedule"
+                  active={activeTab === 'schedule'}
+                  onClick={() => {
+                    setActiveTab('schedule');
+                    loadScheduledPosts();
+                    setIsSidebarOpen(false);
+                  }}
+                />
+                <SidebarItem
+                  icon={Settings}
+                  label="Settings"
+                  active={activeTab === 'settings'}
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setIsSidebarOpen(false);
+                  }}
+                />
+              </nav>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      <main className="main-content full-width">
+        <div className="top-left-controls">
           <button
-            className="desktop-hamburger"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            className="hamburger-trigger"
+            onClick={() => setIsSidebarOpen(true)}
+            title="Open Menu"
           >
-            <Menu size={20} />
+            <Menu size={24} />
           </button>
 
-          <div className="user-profile top">
+          <div className="user-profile header">
             <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
               {isConnected ? 'RD' : '?'}
             </div>
-            {!isSidebarCollapsed && (
-              <div className="user-info">
-                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-                <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
-                  {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
-                </p>
-              </div>
-            )}
+            <div className="user-info">
+              <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+              <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
+                {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
+              </p>
+            </div>
           </div>
         </div>
 
-        <nav className="sidebar-nav">
-          <SidebarItem
-            icon={Plus}
-            label="Create Post"
-            active={activeTab === 'creator'}
-            isCollapsed={isSidebarCollapsed}
-            onClick={() => {
-              setActiveTab('creator');
-              setIsSidebarOpen(false);
-            }}
-          />
-          <SidebarItem
-            icon={History}
-            label="History"
-            active={activeTab === 'history'}
-            isCollapsed={isSidebarCollapsed}
-            onClick={() => {
-              setActiveTab('history');
-              setIsSidebarOpen(false);
-            }}
-          />
-          <SidebarItem
-            icon={Calendar}
-            label="Schedule"
-            active={activeTab === 'schedule'}
-            isCollapsed={isSidebarCollapsed}
-            onClick={() => {
-              setActiveTab('schedule');
-              loadScheduledPosts();
-              setIsSidebarOpen(false);
-            }}
-          />
-          <SidebarItem
-            icon={Settings}
-            label="Settings"
-            active={activeTab === 'settings'}
-            isCollapsed={isSidebarCollapsed}
-            onClick={() => {
-              setActiveTab('settings');
-              setIsSidebarOpen(false);
-            }}
-          />
-        </nav>
-
-        <div className="sidebar-footer">
-          {!isSidebarCollapsed && (
-            <div className="footer-credits">
-              <Sparkles size={14} className="text-primary" />
-              <span>Postly AI</span>
-            </div>
-          )}
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
         <header className="main-header">
           <div className="header-column">
             <div className="header-titles">
               <h2>{activeTab === 'creator' ? 'Create New Post' : 'Post History'}</h2>
               <p className="text-muted">Transform your ideas into high-performing LinkedIn posts</p>
             </div>
-            <div className="header-actions">
-              <button
-                onClick={toggleConnection}
-                className={`btn-connection-round ${isConnected ? 'connected' : ''}`}
-                title={isConnected ? "LinkedIn Connected" : "Connect LinkedIn"}
-              >
-                <Linkedin size={18} />
-                {isConnected && <div className="connection-badge" />}
-              </button>
-            </div>
           </div>
+          <div className="header-actions-placeholder"></div>
         </header>
 
         <div className="content-grid">
@@ -1046,81 +1045,86 @@ const App = () => {
           font-weight: 600;
         }
 
-        /* Sidebar */
-        .sidebar {
-          width: var(--sidebar-width);
-          border-right: 1px solid var(--card-border);
-          padding: 24px;
+        .top-left-controls {
           display: flex;
-          flex-direction: column;
-          position: fixed;
-          height: 100vh;
-          background: var(--bg-dark);
-          z-index: 100;
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar.collapsed {
-          width: 80px;
-          padding: 24px 12px;
-        }
-
-        .sidebar-header-new {
-          display: flex;
-          flex-direction: column;
+          align-items: center;
           gap: 20px;
-          margin-bottom: 40px;
+          margin-bottom: 30px;
+          padding: 10px 0;
         }
 
-        .desktop-hamburger {
+        .hamburger-trigger {
           background: transparent;
           color: white;
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 10px;
+          border-radius: 12px;
           cursor: pointer;
+          border: 1px solid rgba(255,255,255,0.1);
+          flex-shrink: 0;
         }
 
-        .desktop-hamburger:hover {
+        .hamburger-trigger:hover {
           background: rgba(255,255,255,0.1);
         }
 
-        .user-profile.top {
+        .user-profile.header {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 4px;
         }
 
-        .sidebar.collapsed .user-profile.top {
-          justify-content: center;
-          padding: 0;
-        }
-
-        .logo-container {
+        .sidebar {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 280px;
+          background: #000000;
+          z-index: 2000;
+          padding: 24px;
           display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 40px;
+          flex-direction: column;
+          box-shadow: 20px 0 50px rgba(0,0,0,0.5);
         }
 
-        .logo-icon {
-          width: 36px;
-          height: 36px;
+        .sidebar-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(4px);
+          z-index: 1999;
+        }
+
+        .sidebar-header-internal {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 20px;
+        }
+
+        .close-menu {
           background: transparent;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          color: white;
+          padding: 8px;
+          cursor: pointer;
         }
 
-        .logo-container h1 {
+        .header-titles {
+          text-align: left;
+          width: 100%;
+        }
+
+        .main-header h2 {
           font-family: var(--font-display);
-          font-size: 20px;
-          font-weight: 700;
+          font-size: 28px;
+          margin-bottom: 4px;
+          text-align: left;
         }
 
         .sidebar-nav {
@@ -1134,17 +1138,6 @@ const App = () => {
           margin-top: auto;
           padding-top: 20px;
           border-top: 1px solid var(--card-border);
-          display: flex;
-          justify-content: center;
-        }
-
-        .footer-credits {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          color: var(--text-muted);
-          opacity: 0.8;
         }
 
         .user-profile {
@@ -1194,17 +1187,12 @@ const App = () => {
 
         /* Main Content */
         .main-content {
-          margin-left: var(--sidebar-width);
+          margin-left: 0;
           flex: 1;
-          padding: 20px 40px;
+          padding: 20px 20px;
           max-width: 100%;
-          width: calc(100% - var(--sidebar-width));
-          transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .main-content.expanded {
-          margin-left: 80px;
-          width: calc(100% - 80px);
+          width: 100%;
+          transition: all 0.3s ease;
         }
 
         .content-grid {
@@ -1286,7 +1274,7 @@ const App = () => {
           resize: vertical;
           font-size: 14px;
           line-height: 1.5;
-          text-align: center;
+          text-align: left;
         }
 
         .topic-input { min-height: 70px; }
@@ -1728,13 +1716,15 @@ const App = () => {
             display: none; /* Already in top bar */
           }
 
-          .header-titles p {
-            display: none; /* Hide subtitle on mobile to save space */
+          .header-titles {
+            text-align: left;
+            width: 100%;
           }
 
           .header-titles h2 {
             font-size: 20px;
             margin-bottom: 0;
+            text-align: left;
           }
 
           .btn-primary.btn-sm {
