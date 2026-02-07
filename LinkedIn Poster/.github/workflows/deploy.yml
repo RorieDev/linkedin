@@ -1,0 +1,24 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          # Trigger Render deployment via webhook
+          # This endpoint is created in Render dashboard for the service
+          curl -X POST "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_DEPLOY_KEY }}" \
+            -H "Content-Type: application/json"
+        continue-on-error: true
+
+      - name: Wait for deployment
+        run: |
+          echo "Deployment triggered! Check https://dashboard.render.com for build status"
+          echo "Service: linkedin-poster-api"
+          echo "Expected time: 3-5 minutes"
