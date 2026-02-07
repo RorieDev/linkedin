@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import axios from 'axios';
+import { JSDOM } from 'jsdom';
 
 export function initTelegramBot(supabase, tokens, openai) {
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -11,6 +12,9 @@ export function initTelegramBot(supabase, tokens, openai) {
 
   const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
   console.log('✅ Telegram bot initialized');
+
+  // Store pending posts awaiting confirmation
+  const pendingPosts = {};
 
   // Helper: Get LinkedIn member ID for Telegram user
   async function getMemberIdForTelegram(telegramId) {
@@ -43,6 +47,204 @@ export function initTelegramBot(supabase, tokens, openai) {
     }
   }
 
+  // Helper: Fetch and extract text from URL
+  async function fetchArticleContent(url) {
+    try {
+      const response = await axios.get(url, { timeout: 5000 });
+      const dom = new JSDOM(response.data);
+      const document = dom.window.document;
+
+      // Extract main content
+      let text = '';
+
+      // Try to get article content
+      const article = document.querySelector('article') ||
+                     document.querySelector('main') ||
+                     document.querySelector('[role="main"]') ||
+                     document.body;
+
+      // Remove script and style elements
+      article.querySelectorAll('script, style, nav, footer').forEach(el => el.remove());
+
+      // Get text content
+      text = article.textContent
+        .trim()
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .substring(0, 2000); // Limit to 2000 chars for context
+
+      return text || null;
+    } catch (err) {
+      console.error('Failed to fetch URL:', err.message);
+      return null;
+    }
+  }
+
+  // Helper: Check if string is a URL
+  function isUrl(text) {
+    try {
+      new URL(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Helper: Generate post content
+  async function generatePost(topic, articleContext = null) {
+    const userPrompt = articleContext
+      ? `Based on this article excerpt: "${articleContext}"\n\nWrite a compelling LinkedIn post about: ${topic}`
+      : `Write a compelling LinkedIn post about: ${topic}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: `Write LinkedIn posts as pure storytelling and curiosity. No advice, no insights, no prescriptions whatsoever. Just:
+
+WRITE LIKE YOU'RE:
+- Telling a funny or interesting story that happened
+- Noticing something ridiculous or ironic and commenting on the absurdity
+- Wondering out loud about something that confuses or intrigues you (genuine curiosity, not rhetorical)
+- Sharing what you're currently trying to figure out or understand
+- Making a witty observation about human nature, work culture, or everyday situations
+- Describing a weird contradiction you spotted
+- Riffing on something that caught your attention
+
+NOT LIKE YOU'RE:
+- Giving advice or tips
+- Telling people what works or doesn't work
+- Making broad claims about how things "should" be
+- Offering lessons or takeaways
+- Persuading anyone of anything
+- Even subtly suggesting better ways to do things
+
+TONE:
+- Conversational and genuinely curious
+- Funny when it naturally fits
+- Honest about confusion or uncertainty
+- Self-aware and a bit wry
+- Uses strict British English (colour, organisation, realise, analyse, etc.)
+- Authentic—like you're thinking out loud with peers, not performing for an audience
+
+TECHNICAL:
+- MAXIMUM 2-3 paragraphs only
+- MUST start with 🚨 and end with 🚨
+- MUST be directly about the topic provided
+- NO engagement tactics ("What do you think?", "Let me know below", etc.)
+- NO emojis except the required 🚨 ones
+- NO prescriptive language whatsoever—if you catch yourself saying anything about what people should do or think, delete it
+
+CRITICAL: You MUST use the user input provided and write about exactly what they ask. Do not ignore their topic or substitute your own ideas.`
+        },
+        {
+          role: 'user',
+          content: userPrompt
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.5
+    });
+
+    return response.choices[0].message.content;
+  }
+
+  // Helper: Generate image for post
+  async function generateImage(topic) {
+    try {
+      const imageResponse = await openai.images.generate({
+        model: 'dall-e-3',
+        prompt: `Create a professional, engaging image that visually represents this LinkedIn post topic: ${topic}. Photo-realistic style, human moment or workplace scene. High quality, 1024x1024 size. No text in the image.`,
+        size: '1024x1024',
+        quality: 'standard',
+        n: 1
+      });
+      return imageResponse.data[0].url;
+    } catch (err) {
+      console.error('Image generation failed:', err.message);
+      return null;
+    }
+  }
+
+  // Helper: Post to LinkedIn
+  async function postToLinkedIn(memberId, postContent, imageUrl = null) {
+    const token = tokens[memberId];
+    const author = `urn:li:person:${memberId}`;
+
+    let body = {
+      author,
+      lifecycleState: 'PUBLISHED',
+      visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS" },
+      specificContent: {
+        'com.linkedin.ugc.ShareContent': {
+          shareCommentary: { text: postContent },
+          shareMediaCategory: imageUrl ? 'IMAGE' : 'NONE'
+        }
+      }
+    };
+
+    // If we have an image, upload it and add to post
+    if (imageUrl) {
+      try {
+        // Download image from URL
+        const imgResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        const imageBuffer = Buffer.from(imgResponse.data, 'binary');
+
+        // Upload image to LinkedIn
+        const uploadResp = await axios.post(
+          'https://api.linkedin.com/v2/images?action=INIT',
+          {
+            initializeUploadRequest: {
+              owner: author
+            }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token.access_token}`,
+              'X-Restli-Protocol-Version': '2.0.0',
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const uploadUrl = uploadResp.data.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
+        const imageAsset = uploadResp.data.value.image;
+
+        // Upload the image file
+        await axios.put(uploadUrl, imageBuffer, {
+          headers: {
+            'Content-Type': 'image/jpeg'
+          }
+        });
+
+        // Add image to post
+        body.specificContent['com.linkedin.ugc.ShareContent'].media = [
+          {
+            status: 'READY',
+            media: imageAsset
+          }
+        ];
+      } catch (uploadErr) {
+        console.error('Failed to upload image to LinkedIn:', uploadErr.message);
+        body.specificContent['com.linkedin.ugc.ShareContent'].shareMediaCategory = 'NONE';
+        delete body.specificContent['com.linkedin.ugc.ShareContent'].media;
+      }
+    }
+
+    const resp = await axios.post('https://api.linkedin.com/v2/ugcPosts', body, {
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        'X-Restli-Protocol-Version': '2.0.0',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return resp.data;
+  }
+
   // Command: /start
   bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -53,9 +255,10 @@ I can automatically generate and post LinkedIn content for you.
 First, connect your LinkedIn account:
 👉 Use /connect to get started
 
-Once connected, simply send me any topic and I'll:
-1. Generate a post using AI
-2. Automatically publish it to your LinkedIn
+Once connected, you can:
+1. Send any topic → I'll generate a post with image
+2. Paste a URL → I'll read the article and create a post based on it
+3. Review the generated post → Confirm with Yes/No buttons before posting
 
 Questions? Use /help`;
 
@@ -70,12 +273,11 @@ Questions? Use /help`;
     // Check if already connected
     const existingMemberId = await getMemberIdForTelegram(telegramId);
     if (existingMemberId) {
-      await bot.sendMessage(chatId, '✅ You are already connected to LinkedIn!\n\nJust send me a topic to generate a post.');
+      await bot.sendMessage(chatId, '✅ You are already connected to LinkedIn!\n\nJust send me a topic or URL to generate a post.');
       return;
     }
 
     // Generate OAuth link - use standard redirect URI that's registered in LinkedIn app
-    // The state parameter will contain the telegram_id so we can link them after OAuth
     const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
     const RENDER_API_URL = process.env.RENDER_API_URL || 'http://localhost:4000';
     const redirectUri = `${RENDER_API_URL}/auth/linkedin/callback`;
@@ -92,7 +294,7 @@ Questions? Use /help`;
 
     const memberId = await getMemberIdForTelegram(telegramId);
     if (memberId) {
-      await bot.sendMessage(chatId, `✅ Status: Connected to LinkedIn\n\nMember ID: ${memberId}\n\nYou can send me any topic to generate a post!`);
+      await bot.sendMessage(chatId, `✅ Status: Connected to LinkedIn\n\nMember ID: ${memberId}\n\nYou can send me a topic or URL to generate a post!`);
     } else {
       await bot.sendMessage(chatId, '❌ Status: Not connected\n\nUse /connect to link your LinkedIn account.');
     }
@@ -134,33 +336,27 @@ Questions? Use /help`;
 
 🚀 How to use:
 1. Use /connect to link LinkedIn
-2. Send any text as a topic
-3. Bot generates and posts automatically
+2. Send a topic: "Why remote work is changing teams"
+3. Or paste a URL: https://example.com/article
+4. Review the generated post
+5. Click Yes to post, No to discard
 
-Example:
-"Why remote work is changing software development"
-
-The bot will create a post and publish it to your LinkedIn feed.`;
+The bot will create text + image automatically!`;
 
     await bot.sendMessage(chatId, helpMessage);
   });
 
-  // Handle regular text messages (topic submission)
+  // Handle text messages (topics or URLs)
   bot.on('message', async (msg) => {
-    // Ignore commands
+    // Ignore commands and non-text messages
     if (msg.text && msg.text.startsWith('/')) return;
+    if (!msg.text) return;
 
     const chatId = msg.chat.id;
     const telegramId = msg.from.id;
-    const topic = msg.text;
+    const input = msg.text.trim();
 
-    if (!topic || topic.trim().length === 0) return;
-
-    // Validate topic length
-    if (topic.length < 10) {
-      await bot.sendMessage(chatId, '📝 Please send a longer topic (at least 10 characters).\n\nExample: "Why remote work is changing teams"');
-      return;
-    }
+    if (input.length === 0) return;
 
     // Check LinkedIn connection
     const memberId = await getMemberIdForTelegram(telegramId);
@@ -176,165 +372,121 @@ The bot will create a post and publish it to your LinkedIn feed.`;
       return;
     }
 
+    let topic = input;
+    let articleContext = null;
+
     try {
-      await bot.sendMessage(chatId, '⏳ Generating your post...');
+      // Check if input is a URL
+      if (isUrl(input)) {
+        await bot.sendMessage(chatId, '🔍 Reading article...');
+        articleContext = await fetchArticleContent(input);
+        if (!articleContext) {
+          await bot.sendMessage(chatId, '❌ Could not read article. Please provide a topic instead.');
+          return;
+        }
+        // Use article title or first 100 chars as topic
+        topic = articleContext.substring(0, 100);
+      }
+
+      // Validate topic length
+      if (topic.length < 5) {
+        await bot.sendMessage(chatId, '📝 Please send a longer topic or URL (at least 5 characters).');
+        return;
+      }
+
+      await bot.sendMessage(chatId, '⏳ Generating post...');
 
       // Generate post content
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: `Write LinkedIn posts as pure storytelling and curiosity. No advice, no insights, no prescriptions whatsoever. Just:
-
-WRITE LIKE YOU'RE:
-- Telling a funny or interesting story that happened
-- Noticing something ridiculous or ironic and commenting on the absurdity
-- Wondering out loud about something that confuses or intrigues you (genuine curiosity, not rhetorical)
-- Sharing what you're currently trying to figure out or understand
-- Making a witty observation about human nature, work culture, or everyday situations
-- Describing a weird contradiction you spotted
-- Riffing on something that caught your attention
-
-NOT LIKE YOU'RE:
-- Giving advice or tips
-- Telling people what works or doesn't work
-- Making broad claims about how things "should" be
-- Offering lessons or takeaways
-- Persuading anyone of anything
-- Even subtly suggesting better ways to do things
-
-TONE:
-- Conversational and genuinely curious
-- Funny when it naturally fits
-- Honest about confusion or uncertainty
-- Self-aware and a bit wry
-- Uses strict British English (colour, organisation, realise, analyse, etc.)
-- Authentic—like you're thinking out loud with peers, not performing for an audience
-
-TECHNICAL:
-- MAXIMUM 2-3 paragraphs only
-- MUST start with 🚨 and end with 🚨
-- MUST be directly about the topic provided
-- NO engagement tactics ("What do you think?", "Let me know below", etc.)
-- NO emojis except the required 🚨 ones
-- NO prescriptive language whatsoever—if you catch yourself saying anything about what people should do or think, delete it
-
-CRITICAL: You MUST use the user input provided and write about exactly what they ask. Do not ignore their topic or substitute your own ideas.`
-          },
-          {
-            role: 'user',
-            content: `Write a compelling LinkedIn post about: ${topic}`
-          }
-        ],
-        max_tokens: 500,
-        temperature: 0.5
-      });
-
-      const generatedContent = response.choices[0].message.content;
+      const generatedContent = await generatePost(topic, articleContext);
 
       await bot.sendMessage(chatId, `📝 Generated post:\n\n${generatedContent}\n\n🖼️ Generating image...`);
 
-      // Generate image for the post
-      let imageUrl = null;
-      try {
-        const imageResponse = await openai.images.generate({
-          model: 'dall-e-3',
-          prompt: `Create a professional, engaging image that visually represents this LinkedIn post topic: ${topic}. Photo-realistic style, human moment or workplace scene. High quality, 1024x1024 size. No text in the image.`,
-          size: '1024x1024',
-          quality: 'standard',
-          n: 1
-        });
-        imageUrl = imageResponse.data[0].url;
-        console.log('Generated image URL:', imageUrl);
-        await bot.sendMessage(chatId, '✅ Image generated! Publishing to LinkedIn...');
-      } catch (imgErr) {
-        console.error('Image generation failed:', imgErr.message);
-        await bot.sendMessage(chatId, '⚠️ Image generation failed, posting without image...');
+      // Generate image
+      const imageUrl = await generateImage(topic);
+      if (imageUrl) {
+        await bot.sendMessage(chatId, '✅ Image generated!');
+      } else {
+        await bot.sendMessage(chatId, '⚠️ Image generation failed, will post without image');
       }
 
-      // Post to LinkedIn
-      const author = `urn:li:person:${memberId}`;
+      // Store pending post
+      const postId = `${telegramId}_${Date.now()}`;
+      pendingPosts[postId] = {
+        memberId,
+        content: generatedContent,
+        imageUrl,
+        telegramId,
+        chatId
+      };
 
-      let body = {
-        author,
-        lifecycleState: 'PUBLISHED',
-        visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "CONNECTIONS" },
-        specificContent: {
-          'com.linkedin.ugc.ShareContent': {
-            shareCommentary: { text: generatedContent },
-            shareMediaCategory: imageUrl ? 'IMAGE' : 'NONE'
-          }
+      // Show confirmation buttons
+      const opts = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '✅ Yes, post it!', callback_data: `confirm_${postId}` },
+              { text: '❌ No, discard', callback_data: `discard_${postId}` }
+            ]
+          ]
         }
       };
 
-      // If we have an image, upload it and add to post
-      if (imageUrl) {
-        try {
-          // Download image from URL
-          const imgResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-          const imageBuffer = Buffer.from(imgResponse.data, 'binary');
-
-          // Upload image to LinkedIn
-          const uploadResp = await axios.post(
-            'https://api.linkedin.com/v2/images?action=INIT',
-            {
-              initializeUploadRequest: {
-                owner: author
-              }
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token.access_token}`,
-                'X-Restli-Protocol-Version': '2.0.0',
-                'Content-Type': 'application/json'
-              }
-            }
-          );
-
-          const uploadUrl = uploadResp.data.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl;
-          const imageAsset = uploadResp.data.value.image;
-
-          // Upload the image file
-          await axios.put(uploadUrl, imageBuffer, {
-            headers: {
-              'Content-Type': 'image/jpeg'
-            }
-          });
-
-          // Add image to post
-          body.specificContent['com.linkedin.ugc.ShareContent'].media = [
-            {
-              status: 'READY',
-              media: imageAsset
-            }
-          ];
-        } catch (uploadErr) {
-          console.error('Failed to upload image to LinkedIn:', uploadErr.message);
-          // Continue without image
-          body.specificContent['com.linkedin.ugc.ShareContent'].shareMediaCategory = 'NONE';
-          delete body.specificContent['com.linkedin.ugc.ShareContent'].media;
-        }
-      }
-
-      const resp = await axios.post('https://api.linkedin.com/v2/ugcPosts', body, {
-        headers: {
-          Authorization: `Bearer ${token.access_token}`,
-          'X-Restli-Protocol-Version': '2.0.0',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      await bot.sendMessage(chatId, '✅ Successfully published to LinkedIn! 🎉');
-      await updateLastUsed(telegramId);
+      await bot.sendMessage(chatId, '📤 Ready to post?', opts);
 
     } catch (err) {
       console.error('Telegram bot error:', err.message);
       if (err.response?.status === 401) {
         await bot.sendMessage(chatId, '❌ Your LinkedIn token expired.\n\nUse /connect to reconnect.');
       } else {
-        await bot.sendMessage(chatId, `❌ Failed to generate/post: ${err.message}\n\nTry /status to check connection.`);
+        await bot.sendMessage(chatId, `❌ Error: ${err.message}`);
       }
+    }
+  });
+
+  // Handle button clicks for confirmation
+  bot.on('callback_query', async (query) => {
+    const chatId = query.message.chat.id;
+    const telegramId = query.from.id;
+    const data = query.data;
+
+    if (data.startsWith('confirm_')) {
+      const postId = data.replace('confirm_', '');
+      const pendingPost = pendingPosts[postId];
+
+      if (!pendingPost || pendingPost.telegramId !== telegramId) {
+        await bot.answerCallbackQuery(query.id, 'Invalid request', true);
+        return;
+      }
+
+      try {
+        await bot.answerCallbackQuery(query.id, 'Publishing...');
+        await bot.editMessageText('📤 Publishing to LinkedIn...', { chat_id: chatId, message_id: query.message.message_id });
+
+        // Post to LinkedIn
+        await postToLinkedIn(pendingPost.memberId, pendingPost.content, pendingPost.imageUrl);
+
+        await bot.sendMessage(chatId, '✅ Successfully published to LinkedIn! 🎉');
+        await updateLastUsed(telegramId);
+
+        // Clean up
+        delete pendingPosts[postId];
+      } catch (err) {
+        console.error('Post publication error:', err.message);
+        await bot.sendMessage(chatId, `❌ Failed to post: ${err.message}`);
+        delete pendingPosts[postId];
+      }
+    } else if (data.startsWith('discard_')) {
+      const postId = data.replace('discard_', '');
+      const pendingPost = pendingPosts[postId];
+
+      if (!pendingPost || pendingPost.telegramId !== telegramId) {
+        await bot.answerCallbackQuery(query.id, 'Invalid request', true);
+        return;
+      }
+
+      await bot.answerCallbackQuery(query.id);
+      await bot.editMessageText('❌ Post discarded', { chat_id: chatId, message_id: query.message.message_id });
+      delete pendingPosts[postId];
     }
   });
 
