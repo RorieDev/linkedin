@@ -28,16 +28,17 @@ import PWAPrompt from './components/PWAPrompt';
 // API URL - use environment variable in production, localhost in development
 const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname !== 'localhost' ? window.location.origin : 'http://localhost:4000');
 
-const SidebarItem = ({ icon: Icon, label, active, onClick }) => (
+const SidebarItem = ({ icon: Icon, label, active, onClick, isCollapsed }) => (
   <motion.div
-    whileHover={{ x: 5 }}
+    whileHover={{ x: isCollapsed ? 0 : 5 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors ${active ? 'bg-primary text-white' : 'hover:bg-glass text-text-muted hover:text-white'
-      }`}
+      } ${isCollapsed ? 'justify-center px-1' : ''}`}
+    title={isCollapsed ? label : ''}
   >
     <Icon size={20} />
-    <span className="font-medium">{label}</span>
+    {!isCollapsed && <span className="font-medium">{label}</span>}
   </motion.div>
 );
 
@@ -277,6 +278,7 @@ const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
 const App = () => {
   const [activeTab, setActiveTab] = useState('creator');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [postContent, setPostContent] = useState('');
   const [postImage, setPostImage] = useState('');
   const [topic, setTopic] = useState('');
@@ -681,15 +683,32 @@ const App = () => {
       </header>
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="mobile-close" onClick={() => setIsSidebarOpen(false)}>
           <X size={24} />
         </div>
-        <div className="logo-container">
-          <div className="logo-icon">
-            <Sparkles className="text-primary" fill="currentColor" />
+        <div className="sidebar-header-new">
+          <button
+            className="desktop-hamburger"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            <Menu size={20} />
+          </button>
+
+          <div className="user-profile top">
+            <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
+              {isConnected ? 'RD' : '?'}
+            </div>
+            {!isSidebarCollapsed && (
+              <div className="user-info">
+                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
+                  {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
+                </p>
+              </div>
+            )}
           </div>
-          <h1>Postly AI</h1>
         </div>
 
         <nav className="sidebar-nav">
@@ -697,6 +716,7 @@ const App = () => {
             icon={Plus}
             label="Create Post"
             active={activeTab === 'creator'}
+            isCollapsed={isSidebarCollapsed}
             onClick={() => {
               setActiveTab('creator');
               setIsSidebarOpen(false);
@@ -706,6 +726,7 @@ const App = () => {
             icon={History}
             label="History"
             active={activeTab === 'history'}
+            isCollapsed={isSidebarCollapsed}
             onClick={() => {
               setActiveTab('history');
               setIsSidebarOpen(false);
@@ -715,6 +736,7 @@ const App = () => {
             icon={Calendar}
             label="Schedule"
             active={activeTab === 'schedule'}
+            isCollapsed={isSidebarCollapsed}
             onClick={() => {
               setActiveTab('schedule');
               loadScheduledPosts();
@@ -725,6 +747,7 @@ const App = () => {
             icon={Settings}
             label="Settings"
             active={activeTab === 'settings'}
+            isCollapsed={isSidebarCollapsed}
             onClick={() => {
               setActiveTab('settings');
               setIsSidebarOpen(false);
@@ -733,22 +756,17 @@ const App = () => {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-profile">
-            <div className={`avatar ${isConnected ? 'active-border' : ''}`}>
-              {isConnected ? 'RD' : '?'}
+          {!isSidebarCollapsed && (
+            <div className="footer-credits">
+              <Sparkles size={14} className="text-primary" />
+              <span>Postly AI</span>
             </div>
-            <div className="user-info">
-              <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-              <p className={`user-status ${isConnected ? 'connected' : 'offline'}`}>
-                {isConnected ? 'LinkedIn Connected' : 'Not Connected'}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="main-content">
+      <main className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
         <header className="main-header">
           <div className="header-column">
             <div className="header-titles">
@@ -1039,6 +1057,47 @@ const App = () => {
           height: 100vh;
           background: var(--bg-dark);
           z-index: 100;
+          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.collapsed {
+          width: 80px;
+          padding: 24px 12px;
+        }
+
+        .sidebar-header-new {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          margin-bottom: 40px;
+        }
+
+        .desktop-hamburger {
+          background: transparent;
+          color: white;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          cursor: pointer;
+        }
+
+        .desktop-hamburger:hover {
+          background: rgba(255,255,255,0.1);
+        }
+
+        .user-profile.top {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 4px;
+        }
+
+        .sidebar.collapsed .user-profile.top {
+          justify-content: center;
+          padding: 0;
         }
 
         .logo-container {
@@ -1075,6 +1134,17 @@ const App = () => {
           margin-top: auto;
           padding-top: 20px;
           border-top: 1px solid var(--card-border);
+          display: flex;
+          justify-content: center;
+        }
+
+        .footer-credits {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: var(--text-muted);
+          opacity: 0.8;
         }
 
         .user-profile {
@@ -1127,56 +1197,36 @@ const App = () => {
           margin-left: var(--sidebar-width);
           flex: 1;
           padding: 20px 40px;
-          max-width: 1400px;
+          max-width: 100%;
           width: calc(100% - var(--sidebar-width));
+          transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        .main-content.expanded {
+          margin-left: 80px;
+          width: calc(100% - 80px);
+        }
+
+        .content-grid {
+          display: grid;
+          grid-template-columns: minmax(550px, 850px) 1fr;
+          gap: 30px;
+        }
+        
         .main-header {
           display: grid;
-          grid-template-columns: 480px 1fr;
-          gap: 20px;
+          grid-template-columns: minmax(550px, 850px) 1fr;
+          gap: 30px;
           margin-bottom: 20px;
         }
-
+        
         .header-column {
           grid-column: 1;
           position: relative;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 480px;
-        }
-
-        .header-titles {
-          text-align: center;
           width: 100%;
-        }
-
-        .header-actions {
-          position: absolute;
-          right: 0;
-          top: 0;
-          height: 38px; /* Matches h2 height area roughly */
-          display: flex;
-          align-items: center;
-        }
-
-        .main-header h2 {
-          font-family: var(--font-display);
-          font-size: 28px;
-          margin-bottom: 4px;
-          text-align: center;
-        }
-
-        .text-muted {
-          color: var(--text-muted);
-        }
-
-        /* Content Layout */
-        .content-grid {
-          display: grid;
-          grid-template-columns: 480px 1fr;
-          gap: 20px;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
