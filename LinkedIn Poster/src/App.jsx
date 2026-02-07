@@ -146,7 +146,7 @@ const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
               border-radius: 12px;
               padding: 32px;
               color: rgba(0,0,0,0.9);
-              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+              
             }
             .auth-header {
               display: flex;
@@ -757,7 +757,7 @@ const App = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="creator-section"
               >
-                <div className="input-group glass-effect rounded-2xl p-6">
+                <div className="input-group rounded-2xl p-6">
                   <div className="source-inputs mb-6">
                     <div className="input-with-icon mb-4">
                       <Globe size={16} className="text-muted" />
@@ -795,7 +795,7 @@ const App = () => {
                   </div>
                 </div>
 
-                <div className="post-editor glass-effect rounded-2xl p-6 mt-6">
+                <div className="post-editor rounded-2xl p-6 mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <label>Generated Post</label>
                     <div className="flex gap-2">
@@ -929,7 +929,7 @@ const App = () => {
           ) : activeTab === 'history' ? (
             <div className="history-list full-width">
               {history.map(item => (
-                <div key={item.id} className="history-item glass-effect">
+                <div key={item.id} className="history-item">
                   <div className="history-content">
                     <div className="history-meta">
                       <span className="history-date">{item.date}</span>
@@ -950,14 +950,14 @@ const App = () => {
           ) : activeTab === 'schedule' ? (
             <div className="history-list full-width">
               {scheduledPosts.length === 0 ? (
-                <div className="placeholder-content glass-effect" style={{ textAlign: 'center', padding: '48px' }}>
+                <div className="placeholder-content" style={{ textAlign: 'center', padding: '48px' }}>
                   <Calendar size={48} className="text-muted mb-4" />
                   <h3>No scheduled posts</h3>
                   <p className="text-muted">Create a post and click Schedule to plan ahead</p>
                 </div>
               ) : (
                 scheduledPosts.map(post => (
-                  <div key={post.id} className="history-item glass-effect">
+                  <div key={post.id} className="history-item">
                     <div className="history-content">
                       <div className="history-meta">
                         <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
@@ -978,7 +978,7 @@ const App = () => {
               )}
             </div>
           ) : (
-            <div className="placeholder-content glass-effect full-width">
+            <div className="placeholder-content full-width">
               <Settings size={48} className="text-muted mb-4" />
               <h3>Tab coming soon</h3>
               <p className="text-muted">We are working on the {activeTab} functionality.</p>
@@ -1008,7 +1008,7 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+          
           z-index: 1000;
           font-weight: 600;
         }
@@ -1036,7 +1036,7 @@ const App = () => {
         .logo-icon {
           width: 36px;
           height: 36px;
-          background: rgba(10, 102, 194, 0.1);
+          background: transparent;
           border-radius: 10px;
           display: flex;
           align-items: center;
@@ -1104,7 +1104,7 @@ const App = () => {
 
         .avatar.active-border {
           border: 2px solid var(--accent);
-          box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+          
         }
 
         /* Main Content */
@@ -1148,7 +1148,7 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: rgba(0,0,0,0.2);
+          background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
           padding: 0 16px;
@@ -1163,7 +1163,7 @@ const App = () => {
           background: transparent;
           border: none;
           padding: 16px 0;
-          color: white;
+          color: #333333;
           width: 100%;
           font-size: 14px;
           outline: none;
@@ -1171,11 +1171,11 @@ const App = () => {
 
         .topic-input {
           width: 100%;
-          background: rgba(0,0,0,0.2);
+          background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
           padding: 16px;
-          color: white;
+          color: #333333;
           min-height: 100px;
           resize: none;
           font-size: 15px;
@@ -1189,11 +1189,11 @@ const App = () => {
 
         .content-textarea {
           width: 100%;
-          background: rgba(0,0,0,0.3);
+          background: #ffffff;
           border: 1px solid var(--card-border);
           border-radius: 12px;
           padding: 16px;
-          color: white;
+          color: #333333;
           min-height: 250px;
           resize: vertical;
           font-size: 15px;
@@ -1230,7 +1230,7 @@ const App = () => {
         }
 
         .btn-secondary {
-          background: rgba(255,255,255,0.05);
+          background: #ffffff33;
           color: white;
           padding: 10px 20px;
           border-radius: 10px;
@@ -1250,7 +1250,7 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+          
           width: 100%;
           justify-content: center;
         }
@@ -1258,7 +1258,7 @@ const App = () => {
         .btn-generate:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          box-shadow: none;
+          
         }
 
         .btn-icon-label {
@@ -1284,7 +1284,7 @@ const App = () => {
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background: rgba(255,255,255,0.1);
+          background: #ffffff44;
         }
 
         .btn-secondary:disabled {
@@ -1342,7 +1342,7 @@ const App = () => {
           border-radius: 12px;
           color: rgba(0, 0, 0, 0.9);
           padding: 16px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          
           width: 100%;
           max-width: 100%;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

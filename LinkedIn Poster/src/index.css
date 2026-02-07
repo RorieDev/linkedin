@@ -4,12 +4,12 @@
   --primary: #e11d48;
   --primary-hover: #be123c;
   --bg-dark: #e11d48;
-  --card-bg: rgba(255, 255, 255, 0.1);
-  --card-border: rgba(255, 255, 255, 0.2);
+  --card-bg: transparent;
+  --card-border: rgba(255, 255, 255, 0.4);
   --text-main: #ffffff;
-  --text-muted: #f1f1f1;
-  --glass: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-muted: #ffffff;
+  --glass: transparent;
+  --glass-border: rgba(255, 255, 255, 0.4);
   --accent: #22c55e;
   --sidebar-width: 280px;
   --header-height: 70px;
