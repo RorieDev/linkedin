@@ -820,7 +820,6 @@ const App = () => {
                       onClick={generatePost}
                       disabled={isGenerating || (!topic && !sourceUrl)}
                       className={`btn-generate ${isGenerating ? 'loading' : ''}`}
-                      style={{ backgroundColor: '#000000' }}
                     >
                       {isGenerating ? (
                         <div className="spinner"></div>
@@ -835,17 +834,25 @@ const App = () => {
                 </div>
 
                 <div className="post-editor rounded-2xl p-6 mt-6">
-                  <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
-                    <label className="m-0">Generated Post</label>
-                    <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                      <button onClick={copyToClipboard} className="btn-icon-label" title="Copy to clipboard">
+                  <div className="flex justify-center items-center mb-4">
+                    <label className="m-0 text-center w-full">Generated Post</label>
+                  </div>
+
+                  <div className="relative">
+                    <textarea
+                      value={postContent}
+                      onChange={(e) => setPostContent(e.target.value)}
+                      placeholder=""
+                      className="content-textarea pt-12"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                      <button onClick={copyToClipboard} className="btn-icon-label glass-button" title="Copy to clipboard">
                         <Copy size={16} />
-                        Copy
                       </button>
                       <button
                         onClick={generateImage}
                         disabled={isGeneratingImage || (!topic && !sourceUrl)}
-                        className={`btn-icon-label ${isGeneratingImage ? 'loading' : ''}`}
+                        className={`btn-icon-label glass-button ${isGeneratingImage ? 'loading' : ''}`}
                         title="Generate image for this post"
                       >
                         {isGeneratingImage ? (
@@ -853,7 +860,6 @@ const App = () => {
                         ) : (
                           <ImageIcon size={16} />
                         )}
-                        {isGeneratingImage ? 'Generating...' : 'Generate Image'}
                       </button>
                       {(postContent || postImage) && (
                         <button
@@ -863,21 +869,14 @@ const App = () => {
                               setPostImage('');
                             }
                           }}
-                          className="btn-icon-label text-red-500 hover:bg-red-500/10"
+                          className="btn-icon-label glass-button text-red-500 hover:bg-red-500/10"
                           title="Clear generated content"
                         >
                           <Trash2 size={16} />
-                          Clear
                         </button>
                       )}
                     </div>
                   </div>
-                  <textarea
-                    value={postContent}
-                    onChange={(e) => setPostContent(e.target.value)}
-                    placeholder=""
-                    className="content-textarea"
-                  />
 
                   {postImage && (
                     <div className="generated-image-preview mt-4 relative group">
@@ -920,72 +919,74 @@ const App = () => {
                       Schedule
                     </button>
                   </div>
-                  {!isConnected && postContent && (
-                    <p className="text-xs text-center mt-2 text-primary">Connect your LinkedIn to post directly</p>
+                </div>
+                {!isConnected && postContent && (
+                  <p className="text-xs text-center mt-2 text-primary">Connect your LinkedIn to post directly</p>
+                )}
+            </div>
+              </motion.div>
+    </div>
+  ) : activeTab === 'history' ? (
+    <div className="history-list full-width">
+      {history.map(item => (
+        <div key={item.id} className="history-item">
+          <div className="history-content">
+            <div className="history-meta">
+              <span className="history-date">{item.date}</span>
+              <div className="history-actions">
+                <button className="btn-icon" onClick={() => {
+                  navigator.clipboard.writeText(item.content);
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
+                }}><Copy size={16} /></button>
+                <button className="btn-icon text-red-500"><Trash2 size={16} /></button>
+              </div>
+            </div>
+            <p>{item.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : activeTab === 'schedule' ? (
+    <div className="history-list full-width">
+      {scheduledPosts.length === 0 ? (
+        <div className="placeholder-content" style={{ textAlign: 'center', padding: '48px' }}>
+          <Calendar size={48} className="text-muted mb-4" />
+          <h3>No scheduled posts</h3>
+          <p className="text-muted">Create a post and click Schedule to plan ahead</p>
+        </div>
+      ) : (
+        scheduledPosts.map(post => (
+          <div key={post.id} className="history-item">
+            <div className="history-content">
+              <div className="history-meta">
+                <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
+                <div className="history-actions">
+                  <span className={`status-badge ${post.status}`}>{post.status}</span>
+                  {post.status === 'scheduled' && (
+                    <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)}>
+                      <Trash2 size={16} />
+                    </button>
                   )}
                 </div>
-              </motion.div>
+              </div>
+              <p>{post.message.substring(0, 100)}...</p>
+              {post.imageUrl && <p className="text-xs text-muted mt-2">📸 Image attached</p>}
             </div>
-          ) : activeTab === 'history' ? (
-            <div className="history-list full-width">
-              {history.map(item => (
-                <div key={item.id} className="history-item">
-                  <div className="history-content">
-                    <div className="history-meta">
-                      <span className="history-date">{item.date}</span>
-                      <div className="history-actions">
-                        <button className="btn-icon" onClick={() => {
-                          navigator.clipboard.writeText(item.content);
-                          setShowToast(true);
-                          setTimeout(() => setShowToast(false), 3000);
-                        }}><Copy size={16} /></button>
-                        <button className="btn-icon text-red-500"><Trash2 size={16} /></button>
-                      </div>
-                    </div>
-                    <p>{item.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : activeTab === 'schedule' ? (
-            <div className="history-list full-width">
-              {scheduledPosts.length === 0 ? (
-                <div className="placeholder-content" style={{ textAlign: 'center', padding: '48px' }}>
-                  <Calendar size={48} className="text-muted mb-4" />
-                  <h3>No scheduled posts</h3>
-                  <p className="text-muted">Create a post and click Schedule to plan ahead</p>
-                </div>
-              ) : (
-                scheduledPosts.map(post => (
-                  <div key={post.id} className="history-item">
-                    <div className="history-content">
-                      <div className="history-meta">
-                        <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
-                        <div className="history-actions">
-                          <span className={`status-badge ${post.status}`}>{post.status}</span>
-                          {post.status === 'scheduled' && (
-                            <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)}>
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <p>{post.message.substring(0, 100)}...</p>
-                      {post.imageUrl && <p className="text-xs text-muted mt-2">📸 Image attached</p>}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          ) : (
-            <div className="placeholder-content full-width">
-              <Settings size={48} className="text-muted mb-4" />
-              <h3>Tab coming soon</h3>
-              <p className="text-muted">We are working on the {activeTab} functionality.</p>
-            </div>
-          )}
-        </div>
-      </main>
+          </div>
+        ))
+      )}
+    </div>
+  ) : (
+    <div className="placeholder-content full-width">
+      <Settings size={48} className="text-muted mb-4" />
+      <h3>Tab coming soon</h3>
+      <p className="text-muted">We are working on the {activeTab} functionality.</p>
+    </div>
+  )
+}
+        </div >
+      </main >
 
       <style jsx="true">{`
         .app-container {
@@ -1353,7 +1354,7 @@ const App = () => {
         }
 
         .btn-generate {
-          background: #000000 !important;
+          background: linear-gradient(135deg, #0A66C2 0%, #0077B5 100%) !important;
           color: white !important;
           padding: 12px 24px;
           border-radius: 12px;
@@ -1361,15 +1362,22 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          
+          box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+          transition: all 0.3s ease;
           width: 100%;
           justify-content: center;
         }
 
+        .btn-generate:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(10, 102, 194, 0.4);
+        }
+
         .btn-generate:disabled {
-          opacity: 0.5;
+          opacity: 0.7;
           cursor: not-allowed;
-          
+          background: #333 !important;
+          box-shadow: none;
         }
 
         .btn-icon-label {
@@ -1598,6 +1606,28 @@ const App = () => {
           font-weight: 500;
         }
         .text-xs { font-size: 12px; }
+
+        /* New Utils */
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .flex-wrap { flex-wrap: wrap; }
+        .justify-center { justify-content: center; }
+        .w-full { width: 100%; }
+        .text-center { text-align: center; }
+        .top-2 { top: 8px; }
+        .right-2 { right: 8px; }
+        .z-10 { z-index: 10; }
+        .pt-12 { padding-top: 48px !important; }
+
+        .glass-button {
+          background: rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          backdrop-filter: blur(4px);
+          color: #444 !important;
+        }
+        .glass-button:hover {
+          background: rgba(0, 0, 0, 0.1);
+        }
         .font-medium { font-weight: 500; }
         .flex-1 { flex: 1; }
         .full-width { grid-column: 1 / -1; }
@@ -1800,7 +1830,7 @@ const App = () => {
 
       `}</style>
       <PWAPrompt />
-    </div>
+    </div >
   );
 };
 
