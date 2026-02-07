@@ -20,6 +20,8 @@ import {
   Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PWAPrompt from './components/PWAPrompt';
+
 
 // API URL - use environment variable in production, localhost in development
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -1475,8 +1477,10 @@ const App = () => {
           .preview-section { order: -1; }
         }
       `}</style>
+      <PWAPrompt />
     </div>
   );
 };
+
 
 export default App;
