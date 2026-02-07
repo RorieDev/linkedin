@@ -1099,8 +1099,8 @@ const App = () => {
         }
 
         .top-bar-titles h2, .top-bar-titles p {
-          pointer-events: auto;
-          text-align: center; /* Explicitly center text */
+          pointer-events: none; /* Prevent blocking clicks to the connection button */
+          text-align: center;
         }
 
         .top-bar-titles h2 {
@@ -1111,10 +1111,18 @@ const App = () => {
         }
 
         .top-bar-titles p {
-          font-size: 13px; /* Slightly larger for better readability */
+          font-size: 13px;
           margin: 2px 0 0 0;
           opacity: 0.8;
           text-align: center;
+        }
+
+        .top-bar-nav {
+          position: relative;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          gap: 20px;
         }
 
         .top-preview .preview-header h3 {
@@ -1397,8 +1405,11 @@ const App = () => {
 
         .publish-controls {
           display: flex;
-          gap: 12px;
+          gap: 16px;
           align-items: center;
+          justify-content: center;
+          margin-top: 32px;
+          width: 100%;
         }
 
         .publish-controls button {
@@ -1406,16 +1417,29 @@ const App = () => {
           align-items: center;
           justify-content: center;
           gap: 8px;
+          height: 48px;
+          padding: 0 32px;
+          border-radius: 12px;
+          font-weight: 600;
+          width: auto;
+          min-width: 200px;
         }
 
         .publish-controls .btn-primary {
-          flex: 1;
+          background: #000000;
+          color: white;
+          border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .publish-controls .btn-primary:hover {
+          background: #111111;
+          border-color: rgba(255,255,255,0.4);
         }
 
         .publish-controls .btn-secondary {
-          width: auto;
-          min-width: 120px;
-          white-space: nowrap;
+          background: transparent;
+          color: white;
+          border: 1px solid rgba(255,255,255,0.2);
         }
 
         /* LinkedIn Mockup */
@@ -1767,7 +1791,8 @@ const App = () => {
           }
 
           .publish-controls button {
-            width: 100% !important;
+            width: auto !important;
+            min-width: 180px !important;
           }
 
           .mt-6, .mb-6 { margin: 12px 0 !important; }
