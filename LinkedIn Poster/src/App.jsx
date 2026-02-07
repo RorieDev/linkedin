@@ -803,15 +803,15 @@ const App = () => {
                         type="url"
                         value={sourceUrl}
                         onChange={(e) => setSourceUrl(e.target.value)}
-                        placeholder=""
+                        placeholder="URL"
                         className="url-input"
                       />
                     </div>
-                    <label>Write a post about...</label>
+
                     <textarea
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
-                      placeholder=""
+                      placeholder="Write a post about..."
                       className="topic-input"
                     />
                   </div>
@@ -846,14 +846,14 @@ const App = () => {
                       className="content-textarea pt-12"
                     />
                     <div className="absolute top-2 right-2 flex gap-1 z-10">
-                      <button onClick={copyToClipboard} className="btn-icon-label glass-button" title="Copy to clipboard">
+                      <button onClick={copyToClipboard} className="btn-icon-label glass-button-obvious" title="Copy Post">
                         <Copy size={16} />
                       </button>
                       <button
                         onClick={generateImage}
                         disabled={isGeneratingImage || (!topic && !sourceUrl)}
-                        className={`btn-icon-label glass-button ${isGeneratingImage ? 'loading' : ''}`}
-                        title="Generate image for this post"
+                        className={`btn-icon-label glass-button-obvious ${isGeneratingImage ? 'loading' : ''}`}
+                        title="Generate Image"
                       >
                         {isGeneratingImage ? (
                           <div className="spinner-small"></div>
@@ -869,8 +869,8 @@ const App = () => {
                               setPostImage('');
                             }
                           }}
-                          className="btn-icon-label glass-button text-red-500 hover:bg-red-500/10"
-                          title="Clear generated content"
+                          className="btn-icon-label glass-button-obvious text-red-500 hover:bg-red-500/10"
+                          title="Clear Content"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -1627,9 +1627,25 @@ const App = () => {
         .glass-button:hover {
           background: rgba(0, 0, 0, 0.1);
         }
-        .font-medium { font-weight: 500; }
-        .flex-1 { flex: 1; }
-        .full-width { grid-column: 1 / -1; }
+        /* Placeholder styling */
+        input::placeholder, textarea::placeholder {
+          color: #999;
+          font-weight: 400;
+        }
+
+        .glass-button-obvious {
+          background: #f0f0f0;
+          border: 1px solid #ddd;
+          color: #333 !important;
+          border-radius: 8px;
+          padding: 6px 10px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .glass-button-obvious:hover {
+          background: #e5e5e5;
+          transform: translateY(-1px);
+        }
 
         .btn-connection-round {
           width: 36px;
