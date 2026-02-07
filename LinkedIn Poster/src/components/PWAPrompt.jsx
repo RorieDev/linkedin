@@ -57,7 +57,7 @@ function PWAPrompt() {
                             padding: '8px 16px',
                             borderRadius: '6px',
                             border: 'none',
-                            backgroundColor: '#0a66c2',
+                            backgroundColor: '#e11d48',
                             color: 'white',
                             cursor: 'pointer',
                             fontWeight: '600'

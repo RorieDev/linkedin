@@ -1022,7 +1022,7 @@ const App = () => {
           flex-direction: column;
           position: fixed;
           height: 100vh;
-          background: #310404;
+          background: var(--bg-dark);
           z-index: 100;
         }
 
@@ -1242,7 +1242,7 @@ const App = () => {
         }
 
         .btn-generate {
-          background: linear-gradient(135deg, var(--primary) 0%, #be123c 100%);
+          background: #be123c;
           color: white;
           padding: 12px 24px;
           border-radius: 12px;
@@ -1503,7 +1503,7 @@ const App = () => {
           left: 0;
           right: 0;
           height: 60px;
-          background: rgba(49, 4, 4, 0.8);
+          background: var(--bg-dark);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid var(--card-border);
           z-index: 1500;
@@ -1548,7 +1548,7 @@ const App = () => {
             transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             width: 100% !important;
-            background: rgba(49, 4, 4, 0.98);
+            background: var(--bg-dark);
             backdrop-filter: blur(20px);
             justify-content: center;
             align-items: center;
