@@ -622,10 +622,6 @@ const App = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               style={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
                 background: '#ffffff',
                 width: '100%',
                 maxWidth: '400px',
@@ -711,10 +707,11 @@ const App = () => {
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        )
+        }
+      </AnimatePresence >
       {/* Toast Notification */}
-      <AnimatePresence>
+      < AnimatePresence >
         {showToast && (
           <motion.div
             initial={{ opacity: 0, y: 50, x: '-50%' }}
@@ -730,7 +727,7 @@ const App = () => {
             {toastMessage}
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence >
 
       <div style={{ display: 'none' }}>
         <header className="mobile-top-bar">
