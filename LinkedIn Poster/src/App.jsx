@@ -843,7 +843,7 @@ const App = () => {
                 <div className="post-editor rounded-2xl p-6 mt-6 pt-10">
 
                   <div className="relative">
-                    <div className="absolute top-2 left-0 right-0 flex justify-center gap-1 z-10">
+                    <div className="absolute top-2 left-0 right-0 flex justify-center gap-2 z-10">
                       <button onClick={copyToClipboard} className="btn-icon-label glass-button-obvious" title="Copy Post">
                         <Copy size={16} />
                       </button>
@@ -1367,8 +1367,15 @@ const App = () => {
           gap: 10px;
           box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
           transition: all 0.3s ease;
-          width: 100%;
+          width: auto;
+          min-width: 200px;
           justify-content: center;
+        }
+
+        .editor-controls {
+          display: flex;
+          justify-content: center;
+          width: 100%;
         }
 
         .btn-generate:hover:not(:disabled) {
@@ -1448,9 +1455,14 @@ const App = () => {
         }
 
         .publish-controls .btn-secondary {
-          background: transparent;
+          background: rgba(255, 255, 255, 0.1);
           color: white;
-          border: 1px solid rgba(255,255,255,0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .publish-controls .btn-secondary:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* LinkedIn Mockup */
