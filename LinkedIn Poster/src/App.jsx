@@ -1033,7 +1033,7 @@ const App = () => {
                         <span className="history-date">{new Date(post.scheduledTime).toLocaleString()}</span>
                         <div className="history-actions">
                           <span className={`status-badge ${post.status}`}>{post.status}</span>
-                          {post.status === 'scheduled' && (
+                          {['scheduled', 'failed'].includes(post.status) && (
                             <>
                               <button
                                 className="btn-icon"
@@ -1043,7 +1043,12 @@ const App = () => {
                               >
                                 <Pencil size={16} />
                               </button>
-                              <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)} title="Cancel">
+                              <button
+                                className="btn-icon"
+                                onClick={() => cancelScheduledPost(post.id)}
+                                title="Cancel"
+                                style={{ color: '#ef4444' }}
+                              >
                                 <Trash2 size={16} />
                               </button>
                             </>
@@ -1051,6 +1056,11 @@ const App = () => {
                         </div>
                       </div>
                       <p>{post.message.substring(0, 100)}...</p>
+                      {post.status === 'failed' && post.error && (
+                        <p className="text-xs text-red-500 mt-1" style={{ color: '#ef4444' }}>
+                          Error: {post.error}
+                        </p>
+                      )}
                       {post.imageUrl && <p className="text-xs text-muted mt-2">📸 Image attached</p>}
                     </div>
                   </div>

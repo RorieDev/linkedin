@@ -861,7 +861,10 @@ app.put('/scheduled-posts/:postId', async (req, res) => {
     }
     post.scheduledTime = scheduleDate.toISOString();
     // Reset status to scheduled if it was failed
-    if (post.status === 'failed') post.status = 'scheduled';
+    if (post.status === 'failed') {
+      post.status = 'scheduled';
+      post.error = null;
+    }
   }
 
   try {
