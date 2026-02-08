@@ -369,7 +369,37 @@ app.get('/auth/linkedin/callback', async (req, res) => {
       }
     }
 
-    res.json({ success: true, memberId });
+    // Return HTML that closes the window
+    const htmlResponse = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>LinkedIn Connected</title>
+        <style>
+          body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: white; }
+          .success { color: #10b981; font-size: 24px; margin-bottom: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="success">✓ Connected Successfully!</div>
+        <p>You can close this window now.</p>
+        <script>
+          // Notify opener
+          try {
+            if (window.opener) {
+              window.opener.postMessage({ type: 'LINKEDIN_CONNECTED', memberId: '${memberId}' }, '*');
+            }
+          } catch (e) {}
+          
+          // Close window after short delay
+          setTimeout(() => {
+            window.close();
+          }, 2000);
+        </script>
+      </body>
+      </html>
+    `;
+    res.send(htmlResponse);
   } catch (err) {
     console.error(err?.response?.data || err.message);
     res.status(500).json({ error: 'Token exchange or profile fetch failed' });
