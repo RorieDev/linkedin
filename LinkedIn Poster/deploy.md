@@ -25,7 +25,7 @@ If automatic deployment isn't triggering:
    - Wait for status to change from "Building" → "Live" (usually 3-5 minutes)
 
 3. **Verify Deployment**
-   - Visit: https://linkedin-poster-api.onrender.com
+   - Visit: https://linkedin-sinj.onrender.com
    - Should see LinkedIn Poster UI load
    - Check browser console for any errors
 
@@ -51,9 +51,9 @@ Make sure these are set in Render dashboard (`linkedin-poster-api` service setti
 
 **Pre-configured:**
 - `PORT=4000`
-- `LINKEDIN_REDIRECT_URI=https://linkedin-poster-api.onrender.com/auth/linkedin/callback`
-- `RENDER_API_URL=https://linkedin-poster-api.onrender.com`
-- `VITE_API_URL=https://linkedin-poster-api.onrender.com`
+- `LINKEDIN_REDIRECT_URI=https://linkedin-sinj.onrender.com/auth/linkedin/callback`
+- `RENDER_API_URL=https://linkedin-sinj.onrender.com`
+- `VITE_API_URL=https://linkedin-sinj.onrender.com`
 
 ## Troubleshooting Deployments
 
@@ -95,7 +95,7 @@ Make sure these are set in Render dashboard (`linkedin-poster-api` service setti
 
 - Verify `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` are set
 - Check LinkedIn Developer App settings has correct redirect URI:
-  - Should be: `https://linkedin-poster-api.onrender.com/auth/linkedin/callback`
+  - Should be: `https://linkedin-sinj.onrender.com/auth/linkedin/callback`
 - Redeploy if you just added/changed these variables
 
 ## Build Command Reference
@@ -129,20 +129,20 @@ Start Phase:
   - Backend initializes Telegram bot
   - Backend serves dist/ at root path (/)
     ↓
-Service Live at: https://linkedin-poster-api.onrender.com
+Service Live at: https://linkedin-sinj.onrender.com
 ```
 
 ## Checking Deployment Status
 
-**Current service URL:** https://linkedin-poster-api.onrender.com
+**Current service URL:** https://linkedin-sinj.onrender.com
 
 To check if it's working:
 ```bash
 # Should return HTML (frontend)
-curl https://linkedin-poster-api.onrender.com/
+curl https://linkedin-sinj.onrender.com/
 
 # Should return JSON (API)
-curl https://linkedin-poster-api.onrender.com/health || \
+curl https://linkedin-sinj.onrender.com/health || \
 curl https://linkedin-poster-api.onrender.com/generate -X POST \
   -H "Content-Type: application/json" \
   -d '{"topic":"test"}'

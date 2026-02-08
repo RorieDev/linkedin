@@ -27,7 +27,13 @@ SUPABASE_URL=<your_supabase_url>
 SUPABASE_KEY=<your_supabase_anon_key>
 TELEGRAM_BOT_TOKEN=<your_bot_token>
 RENDER_API_URL=https://linkedin-sinj.onrender.com
+LINKEDIN_REDIRECT_URI=https://linkedin-sinj.onrender.com/auth/linkedin/callback
 ```
+
+> ⚠️ **CRITICAL INSTRUCTION**: The `LINKEDIN_REDIRECT_URI` must match **EXACTLY** what is configured in your [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps/) under **Auth > OAuth 2.0 settings**. If they don't match, LinkedIn will return a "Global redirect URI mismatch" or the login will simply fail.
+> 
+> *Note: The server now attempts to auto-fix this if it detects a localhost URL while running on Render, but it's best to set it correctly in the dashboard.*
+
 
 ### 3. **Recent UI Improvements**
 - ✅ Clean solid red theme (no gradients/overlays)
