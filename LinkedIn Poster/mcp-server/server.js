@@ -203,8 +203,8 @@ initializeFromSupabase()
   });
 
 function linkedinAuthUrl(state) {
-  // Scopes: openid profile for reading user info, w_member_social for posting
-  const scope = encodeURIComponent('openid profile w_member_social');
+  // Scopes: openid profile email w_member_social (and legacy r_liteprofile/r_emailaddress as fallback)
+  const scope = encodeURIComponent('openid profile email w_member_social r_liteprofile r_emailaddress');
   return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}&state=${state}`;
 }
 
@@ -785,6 +785,20 @@ app.post('/post', async (req, res) => {
 });
 
 app.get('/tokens', (req, res) => res.json(tokens));
+
+// Disconnect/Logout endpoint
+app.post('/auth/logout', async (req, res) => {
+  const { memberId } = req.body;
+  if (memberId && tokens[memberId]) {
+    delete tokens[memberId];
+    console.log(`Removed token for memberId: ${memberId}`);
+  } else {
+    // If no specific ID, clear all (useful for troubleshooting)
+    tokens = {};
+    console.log('Cleared all tokens');
+  }
+  res.json({ success: true });
+});
 
 // Schedule a post for later. Body: { memberId, message, imageUrl, scheduledTime }
 app.post('/schedule', async (req, res) => {

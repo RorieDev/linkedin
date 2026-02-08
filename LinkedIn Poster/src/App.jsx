@@ -552,17 +552,19 @@ const App = () => {
 
   const toggleConnection = () => {
     if (!isConnected) {
-      // Try real OAuth, but fallback to demo mode immediately for testing
-      const demoMemberId = 'demo_user_' + Math.random().toString(36).slice(2, 11);
-      setConnectedMemberId(demoMemberId);
-      setIsConnected(true);
-      localStorage.setItem('linkedin_connected', 'true');
-      localStorage.setItem('linkedin_member_id', demoMemberId);
-      showNotification('Connected! (Demo mode - open OAuth window in console if needed)');
-      // Still attempt real OAuth in background
+      // Start OAuth flow
       startOAuth();
     } else {
       if (window.confirm('Are you sure you want to disconnect your LinkedIn account?')) {
+        // Clear session on server to prevent immediate re-connection with stale token
+        if (connectedMemberId) {
+          fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ memberId: connectedMemberId })
+          }).catch(console.error);
+        }
+
         setIsConnected(false);
         setConnectedMemberId(null);
         localStorage.removeItem('linkedin_connected');
