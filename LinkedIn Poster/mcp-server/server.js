@@ -250,12 +250,23 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     }
 
     // Fallback: Try to fetch with minimal permissions
+    let profilePicture = null;
+    let firstName = '';
+    let lastName = '';
+
     if (!memberId) {
       try {
-        const meResp = await axios.get('https://api.linkedin.com/v2/me', {
+        const meResp = await axios.get('https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
           headers: { Authorization: `Bearer ${access_token}` }
         });
         memberId = meResp.data.id;
+        firstName = meResp.data.firstName?.localized?.en_US || Object.values(meResp.data.firstName?.localized || {})[0] || '';
+        lastName = meResp.data.lastName?.localized?.en_US || Object.values(meResp.data.lastName?.localized || {})[0] || '';
+
+        // Extract profile picture
+        const pPic = meResp.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
+        if (pPic) profilePicture = pPic;
+
         console.log('Fetched memberId from /me endpoint:', memberId);
       } catch (err) {
         console.error('Failed to fetch /me:', err?.response?.data || err.message);
@@ -264,10 +275,27 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         memberId = 'li_' + crypto.createHash('sha256').update(access_token).digest('hex').substring(0, 16);
         console.log('Generated fallback memberId:', memberId);
       }
+    } else {
+      // If we got memberId from ID token, still try to fetch profile for picture
+      try {
+        const meResp = await axios.get('https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        firstName = meResp.data.firstName?.localized?.en_US || Object.values(meResp.data.firstName?.localized || {})[0] || '';
+        lastName = meResp.data.lastName?.localized?.en_US || Object.values(meResp.data.lastName?.localized || {})[0] || '';
+        // Extract profile picture
+        const pPic = meResp.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
+        if (pPic) profilePicture = pPic;
+      } catch (e) {
+        console.log('Failed to fetch profile details:', e.message);
+      }
     }
+
     const tokenData = {
       access_token,
-      expires_at: Date.now() + (expires_in * 1000)
+      expires_at: Date.now() + (expires_in * 1000),
+      profilePicture,
+      name: `${firstName} ${lastName}`.trim()
     };
     tokens[memberId] = tokenData;
     await saveToken(memberId, tokenData);

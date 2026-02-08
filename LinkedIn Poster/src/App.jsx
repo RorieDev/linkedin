@@ -277,6 +277,10 @@ const ConnectionModal = ({ isOpen, onClose, onConnect }) => {
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('creator');
+  const [profileData, setProfileData] = useState({
+    name: localStorage.getItem('linkedin_name') || 'Guest',
+    picture: localStorage.getItem('linkedin_avatar') || null
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [postContent, setPostContent] = useState('');
   const [postImage, setPostImage] = useState('');
@@ -563,6 +567,9 @@ const App = () => {
         setConnectedMemberId(null);
         localStorage.removeItem('linkedin_connected');
         localStorage.removeItem('linkedin_member_id');
+        localStorage.removeItem('linkedin_avatar');
+        localStorage.removeItem('linkedin_name');
+        setProfileData({ name: 'Guest', picture: null });
         showNotification('Disconnected from LinkedIn.');
       }
     }
@@ -583,10 +590,19 @@ const App = () => {
         if (ids.length > 0) {
           clearInterval(poll);
           const id = ids[0];
+          const userData = data[id];
           setConnectedMemberId(id);
           setIsConnected(true);
+          setProfileData({
+            name: userData.name || 'LinkedIn User',
+            picture: userData.profilePicture
+          });
+
           localStorage.setItem('linkedin_connected', 'true');
           localStorage.setItem('linkedin_member_id', id);
+          if (userData.profilePicture) localStorage.setItem('linkedin_avatar', userData.profilePicture);
+          if (userData.name) localStorage.setItem('linkedin_name', userData.name);
+
           showNotification('Connected to LinkedIn successfully!');
           try { oauthWindow && oauthWindow.close(); } catch (e) { }
         } else if (Date.now() - start > timeout) {
@@ -838,11 +854,11 @@ const App = () => {
               onClick={toggleConnection}
               title={isConnected ? "Click to disconnect" : "Click to connect LinkedIn"}
             >
-              <div className="avatar">
-                {isConnected ? 'RD' : '?'}
+              <div className="avatar" style={profileData.picture ? { backgroundImage: `url(${profileData.picture})`, backgroundSize: 'cover' } : {}}>
+                {!profileData.picture && (isConnected ? 'RD' : '?')}
               </div>
               <div className="user-info">
-                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className="user-name">{isConnected ? profileData.name : 'Guest'}</p>
                 <p className="user-status">
                   {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
                 </p>
@@ -1400,7 +1416,7 @@ const App = () => {
           border-color: var(--primary);
         }
 
-        .url-input, .topic-input, .content-textarea {
+        .topic-input, .content-textarea {
           width: 100%;
           background: #ffffff;
           border: 1px solid var(--card-border);
