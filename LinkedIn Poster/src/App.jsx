@@ -1276,6 +1276,7 @@ const App = () => {
 
         .user-profile.pointer {
           cursor: pointer;
+          pointer-events: auto;
         }
 
         .user-profile.pointer:hover {
