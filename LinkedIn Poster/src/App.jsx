@@ -729,7 +729,7 @@ const App = () => {
                 />
                 <SidebarItem
                   icon={Calendar}
-                  label="Schedule"
+                  label="Scheduled"
                   active={activeTab === 'schedule'}
                   onClick={() => {
                     setActiveTab('schedule');
@@ -771,8 +771,8 @@ const App = () => {
               onClick={toggleConnection}
               title={isConnected ? "Click to disconnect" : "Click to connect LinkedIn"}
               style={{
-                backgroundColor: isConnected ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                border: isConnected ? '1px solid rgba(34, 197, 94, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: isConnected ? '#22c55e' : '#666666',
+                border: '1px solid transparent',
                 margin: '0 auto',
                 borderRadius: '50px',
                 padding: '4px 16px',
@@ -780,12 +780,12 @@ const App = () => {
                 cursor: 'pointer'
               }}
             >
-              <div className={`avatar ${isConnected ? 'active-border' : ''}`} style={{ width: 28, height: 28, fontSize: 12 }}>
+              <div className="avatar" style={{ width: 28, height: 28, fontSize: 12, border: '2px solid black' }}>
                 {isConnected ? 'RD' : '?'}
               </div>
               <div className="user-info">
-                <p className="user-name" style={{ fontSize: 13 }}>{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-                <p className="user-status" style={{ fontSize: 10, color: isConnected ? '#22c55e' : '#999' }}>
+                <p className="user-name" style={{ fontSize: 13, color: 'white' }}>{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className="user-status" style={{ fontSize: 10, color: 'white' }}>
                   {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
                 </p>
               </div>
@@ -843,7 +843,7 @@ const App = () => {
                 <div className="post-editor rounded-2xl p-6 mt-6 pt-10">
 
                   <div className="relative">
-                    <div className="absolute top-2 left-0 right-0 flex justify-center gap-2 z-10">
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-10">
                       <button onClick={copyToClipboard} className="btn-icon-label glass-button-obvious" title="Copy Post">
                         <Copy size={16} />
                       </button>
@@ -878,7 +878,7 @@ const App = () => {
                       value={postContent}
                       onChange={(e) => setPostContent(e.target.value)}
                       placeholder=""
-                      className="content-textarea pt-16"
+                      className="content-textarea pb-12"
                     />
                   </div>
 
@@ -1630,9 +1630,13 @@ const App = () => {
         .w-full { width: 100%; }
         .text-center { text-align: center; }
         .top-2 { top: 8px; }
+        .bottom-2 { bottom: 8px; }
         .right-2 { right: 8px; }
+        .left-0 { left: 0; }
+        .right-0 { right: 0; }
         .z-10 { z-index: 10; }
         .pt-12 { padding-top: 48px !important; }
+        .pb-12 { padding-bottom: 48px !important; }
 
         .glass-button {
           background: rgba(0, 0, 0, 0.05);
