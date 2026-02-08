@@ -876,6 +876,46 @@ app.post('/post', async (req, res) => {
 
 app.get('/tokens', (req, res) => res.json(tokens));
 
+// Fetch and update profile info for a member
+app.get('/profile/:memberId', async (req, res) => {
+  const { memberId } = req.params;
+  const entry = tokens[memberId];
+
+  if (!entry || !entry.access_token) {
+    return res.status(404).json({ error: 'No token found for this member' });
+  }
+
+  try {
+    // Fetch from LinkedIn userinfo endpoint
+    const userinfoResp = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${entry.access_token}` }
+    });
+
+    const userInfo = userinfoResp.data;
+    const profileData = {
+      name: `${userInfo.given_name || ''} ${userInfo.family_name || ''}`.trim() || 'LinkedIn User',
+      picture: userInfo.picture || null,
+      email: userInfo.email || null
+    };
+
+    // Update stored token with profile info
+    tokens[memberId] = {
+      ...entry,
+      name: profileData.name,
+      profilePicture: profileData.picture
+    };
+
+    // Update in Supabase too
+    await saveToken(memberId, tokens[memberId]);
+
+    console.log('Fetched profile for', memberId, ':', profileData.name);
+    res.json(profileData);
+  } catch (err) {
+    console.error('Failed to fetch profile:', err?.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to fetch profile from LinkedIn' });
+  }
+});
+
 // Disconnect/Logout endpoint
 app.post('/auth/logout', async (req, res) => {
   const { memberId } = req.body;

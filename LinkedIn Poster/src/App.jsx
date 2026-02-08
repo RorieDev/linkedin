@@ -624,17 +624,35 @@ const App = () => {
           const userData = data[id];
           setConnectedMemberId(id);
           setIsConnected(true);
+
+          // If no profile data in token, fetch it separately
+          let profileName = userData.name;
+          let profilePic = userData.profilePicture;
+
+          if (!profileName || !profilePic) {
+            try {
+              const profileRes = await fetch(`${baseUrl}/profile/${id}`);
+              if (profileRes.ok) {
+                const profile = await profileRes.json();
+                profileName = profile.name || profileName || 'LinkedIn User';
+                profilePic = profile.picture || profilePic;
+              }
+            } catch (e) {
+              console.log('Could not fetch profile:', e.message);
+            }
+          }
+
           setProfileData({
-            name: userData.name || 'LinkedIn User',
-            picture: userData.profilePicture
+            name: profileName || 'LinkedIn User',
+            picture: profilePic
           });
 
           localStorage.setItem('linkedin_connected', 'true');
           localStorage.setItem('linkedin_member_id', id);
-          if (userData.profilePicture) localStorage.setItem('linkedin_avatar', userData.profilePicture);
-          if (userData.name) localStorage.setItem('linkedin_name', userData.name);
+          if (profilePic) localStorage.setItem('linkedin_avatar', profilePic);
+          if (profileName) localStorage.setItem('linkedin_name', profileName);
 
-          showNotification(`Connected as ${userData.name || 'User'}!`);
+          showNotification(`Connected as ${profileName || 'User'}!`);
 
           // Close explicitly just in case
           try { oauthWindow && oauthWindow.close(); } catch (e) { }
