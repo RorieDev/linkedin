@@ -231,8 +231,8 @@ initializeFromSupabase()
   });
 
 function linkedinAuthUrl(state) {
-  // Scopes: openid profile email w_member_social (and legacy r_liteprofile/r_emailaddress as fallback)
-  const scope = encodeURIComponent('openid profile email w_member_social r_liteprofile r_emailaddress');
+  // Scopes: openid profile email for user info, w_member_social for posting
+  const scope = encodeURIComponent('openid profile email w_member_social');
   return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}&state=${state}`;
 }
 
