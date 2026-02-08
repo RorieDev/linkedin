@@ -39,7 +39,16 @@ console.log('Current directory:', process.cwd());
 const PORT = process.env.PORT || 4000;
 const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
-const REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI;
+let REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI;
+
+// Auto-correct REDIRECT_URI if on Render but set to localhost
+const renderUrl = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_API_URL;
+if (renderUrl && (!REDIRECT_URI || REDIRECT_URI.includes('localhost'))) {
+  REDIRECT_URI = `${renderUrl.replace(/\/$/, '')}/auth/linkedin/callback`;
+  console.log('🔄 Auto-corrected REDIRECT_URI for Render:', REDIRECT_URI);
+} else {
+  console.log('📡 Using configured REDIRECT_URI:', REDIRECT_URI);
+}
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -49,6 +58,24 @@ const openai = new OpenAI({
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
   console.warn('Missing LINKEDIN_CLIENT_ID / LINKEDIN_CLIENT_SECRET / LINKEDIN_REDIRECT_URI in env');
 }
+
+// Debug endpoint
+app.get('/debug', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    config: {
+      REDIRECT_URI,
+      RENDER_URL: renderUrl,
+      PORT,
+      NODE_ENV: process.env.NODE_ENV,
+      CLIENT_ID_SET: !!CLIENT_ID,
+      CLIENT_SECRET_SET: !!CLIENT_SECRET ? 'SET' : 'MISSING',
+      SUPABASE_URL_SET: !!process.env.SUPABASE_URL,
+      OPENAI_KEY_SET: !!process.env.OPENAI_API_KEY
+    }
+  });
+});
 
 // Load tokens from Supabase or initialize empty
 async function loadTokens() {
