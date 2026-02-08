@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   Globe,
   Menu,
-  X
+  X,
+  Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PWAPrompt from './components/PWAPrompt';
@@ -289,6 +290,8 @@ const App = () => {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledTime, setScheduledTime] = useState('');
   const [scheduledPosts, setScheduledPosts] = useState([]);
+  const [editingPost, setEditingPost] = useState(null);
+  const [editContent, setEditContent] = useState('');
   const [isLoadingScheduled, setIsLoadingScheduled] = useState(false);
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -491,6 +494,49 @@ const App = () => {
     }
   };
 
+  const handleEditScheduledPost = (post) => {
+    setEditingPost(post);
+    setEditContent(post.message);
+    // Convert UTC time from server to local datetime-local format
+    const date = new Date(post.scheduledTime);
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setScheduledTime(localDate);
+    setIsScheduleModalOpen(true);
+  };
+
+  const saveEditedPost = async () => {
+    if (!editContent || !scheduledTime) return showNotification('Message and time required');
+
+    setIsPosting(true);
+    try {
+      const resp = await fetch(`${API_URL}/scheduled-posts/${editingPost.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: editContent,
+          scheduledTime: new Date(scheduledTime).toISOString(),
+          // keep existing image
+        })
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json();
+        throw new Error(data.error || 'Failed to update');
+      }
+
+      showNotification('Scheduled post updated successfully!');
+      setIsScheduleModalOpen(false);
+      setEditingPost(null);
+      setEditContent('');
+      setScheduledTime('');
+      loadScheduledPosts();
+    } catch (err) {
+      showNotification('Update failed: ' + err.message);
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
   const handleConnect = () => {
     // Use a demo member ID for testing
     const demoMemberId = 'demo_user_' + Math.random().toString(36).slice(2, 11);
@@ -593,9 +639,28 @@ const App = () => {
             >
               <div className="auth-header">
                 <Calendar className="text-primary" size={32} />
-                <h2>Schedule Post</h2>
+                <h2>{editingPost ? 'Edit Scheduled Post' : 'Schedule Post'}</h2>
               </div>
               <div className="auth-content">
+                {editingPost && (
+                  <div className="auth-input-group" style={{ marginBottom: '16px' }}>
+                    <label>Message content:</label>
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        fontSize: '14px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        minHeight: '100px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="auth-input-group">
                   <label>Select date and time:</label>
                   <input
@@ -617,20 +682,25 @@ const App = () => {
                     className="auth-btn-primary"
                     onClick={(e) => {
                       e.preventDefault();
-                      console.log('Modal Schedule button clicked');
-                      schedulePost();
+                      if (editingPost) {
+                        saveEditedPost();
+                      } else {
+                        schedulePost();
+                      }
                     }}
                     disabled={isPosting || !scheduledTime}
                     style={{ flex: 1 }}
                     type="button"
                   >
-                    {isPosting ? 'Scheduling...' : 'Schedule'}
+                    {isPosting ? 'Saving...' : (editingPost ? 'Update' : 'Schedule')}
                   </button>
                   <button
                     className="auth-btn-google"
                     onClick={(e) => {
                       e.preventDefault();
                       setIsScheduleModalOpen(false);
+                      setEditingPost(null);
+                      setEditContent('');
                     }}
                     style={{ flex: 1, background: '#eee', color: '#333' }}
                     type="button"
@@ -914,6 +984,8 @@ const App = () => {
                       className="btn-secondary"
                       onClick={(e) => {
                         e.preventDefault();
+                        setEditingPost(null);
+                        setEditContent('');
                         setIsScheduleModalOpen(true);
                       }}
                       disabled={!postContent}
@@ -967,9 +1039,19 @@ const App = () => {
                         <div className="history-actions">
                           <span className={`status-badge ${post.status}`}>{post.status}</span>
                           {post.status === 'scheduled' && (
-                            <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)}>
-                              <Trash2 size={16} />
-                            </button>
+                            <>
+                              <button
+                                className="btn-icon"
+                                onClick={() => handleEditScheduledPost(post)}
+                                title="Edit"
+                                style={{ color: '#0A66C2', marginRight: '8px' }}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button className="btn-icon text-red-500" onClick={() => cancelScheduledPost(post.id)} title="Cancel">
+                                <Trash2 size={16} />
+                              </button>
+                            </>
                           )}
                         </div>
                       </div>

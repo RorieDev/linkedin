@@ -800,6 +800,40 @@ app.delete('/scheduled-posts/:postId', async (req, res) => {
   }
 });
 
+// Update a scheduled post
+app.put('/scheduled-posts/:postId', async (req, res) => {
+  const { postId } = req.params;
+  const { message, imageUrl, scheduledTime } = req.body;
+
+  if (!scheduledPosts[postId]) {
+    return res.status(404).json({ error: 'Scheduled post not found' });
+  }
+
+  const post = scheduledPosts[postId];
+
+  if (message) post.message = message;
+  if (imageUrl !== undefined) post.imageUrl = imageUrl;
+  if (scheduledTime) {
+    const scheduleDate = new Date(scheduledTime);
+    if (scheduleDate < new Date()) {
+      return res.status(400).json({ error: 'Scheduled time must be in the future' });
+    }
+    post.scheduledTime = scheduleDate.toISOString();
+    // Reset status to scheduled if it was failed
+    if (post.status === 'failed') post.status = 'scheduled';
+  }
+
+  try {
+    scheduledPosts[postId] = post;
+    await saveScheduledPost(postId, post);
+    console.log(`Updated scheduled post: ${postId}`);
+    res.json({ success: true, post });
+  } catch (err) {
+    console.error('Update error:', err?.message);
+    res.status(500).json({ error: 'Failed to update post', details: err?.message });
+  }
+});
+
 // Job scheduler - check every minute for posts to publish
 cron.schedule('* * * * *', async () => {
   const now = new Date();
