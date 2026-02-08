@@ -217,8 +217,28 @@ app.get('/auth/linkedin/callback', async (req, res) => {
   console.log('=== LINKEDIN OAUTH CALLBACK ===');
   console.log('Query params:', { code: req.query.code?.substring(0, 20), state: req.query.state, error: req.query.error });
   const { code, state, error } = req.query;
-  if (error) return res.status(400).json({ error });
-  if (!code) return res.status(400).json({ error: 'Missing code' });
+  if (error) {
+    return res.status(400).send(`
+      <html><body style="background:#000;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
+        <div style="text-align:center">
+          <h2 style="color:#ef4444">Connection Failed</h2>
+          <p>LinkedIn returned an error: ${error}</p>
+          <button onclick="window.close()" style="margin-top:20px;padding:10px 20px;border-radius:8px;border:none;background:#333;color:white;cursor:pointer">Close Window</button>
+        </div>
+      </body></html>
+    `);
+  }
+  if (!code) {
+    return res.status(400).send(`
+      <html><body style="background:#000;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
+        <div style="text-align:center">
+          <h2 style="color:#ef4444">Connection Failed</h2>
+          <p>No authorization code received from LinkedIn.</p>
+          <button onclick="window.close()" style="margin-top:20px;padding:10px 20px;border-radius:8px;border:none;background:#333;color:white;cursor:pointer">Close Window</button>
+        </div>
+      </body></html>
+    `);
+  }
 
   try {
     const params = new URLSearchParams();
@@ -401,8 +421,20 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     `;
     res.send(htmlResponse);
   } catch (err) {
-    console.error(err?.response?.data || err.message);
-    res.status(500).json({ error: 'Token exchange or profile fetch failed' });
+    console.error('OAuth Error:', err?.response?.data || err.message);
+    const errorMessage = err?.response?.data?.error_description || err.message || 'Unknown error occurred';
+    res.status(500).send(`
+      <html><body style="background:#000;color:white;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;">
+        <div style="text-align:center">
+          <h2 style="color:#ef4444">Connection Failed</h2>
+          <p>An error occurred during connection.</p>
+          <div style="background:#1f2937;padding:15px;border-radius:6px;margin:20px 0;text-align:left;font-family:monospace;font-size:12px;color:#f3f4f6;max-width:500px">
+            ${errorMessage}
+          </div>
+          <button onclick="window.close()" style="margin-top:20px;padding:10px 20px;border-radius:8px;border:none;background:#333;color:white;cursor:pointer">Close Window</button>
+        </div>
+      </body></html>
+    `);
   }
 });
 

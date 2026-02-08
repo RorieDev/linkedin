@@ -579,18 +579,47 @@ const App = () => {
 
   // Open backend OAuth endpoint and poll /tokens until a token appears
   const startOAuth = () => {
-    const oauthUrl = `${API_URL}/auth/linkedin`;
+    // Force https in production if not present
+    const isProd = API_URL.includes('onrender.com');
+    const baseUrl = isProd ? API_URL.replace('http://', 'https://') : API_URL;
+
+    const oauthUrl = `${baseUrl}/auth/linkedin`;
     const oauthWindow = window.open(oauthUrl, '_blank', 'width=600,height=800');
+
+    if (!oauthWindow) {
+      showNotification('Popup blocked! Please allow popups for this site.');
+      return;
+    }
+
     const start = Date.now();
-    const timeout = 60 * 1000; // 60s
+    const timeout = 120 * 1000; // 2 minutes timeout
+
+    // Listen for cross-window message from the popup (if on same origin)
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'LINKEDIN_CONNECTED') {
+        console.log('Received message from popup:', event.data);
+        // We can immediately trigger a fetch check here
+      }
+    };
+    window.addEventListener('message', handleMessage);
+
     const poll = setInterval(async () => {
       try {
-        const res = await fetch(`${API_URL}/tokens`);
-        if (!res.ok) return;
+        console.log('Polling for tokens...');
+        const res = await fetch(`${baseUrl}/tokens`);
+        if (!res.ok) {
+          console.error('Poll failed:', res.status);
+          return;
+        }
+
         const data = await res.json();
         const ids = Object.keys(data || {});
+        console.log('Tokens found:', ids.length);
+
         if (ids.length > 0) {
           clearInterval(poll);
+          window.removeEventListener('message', handleMessage);
+
           const id = ids[0];
           const userData = data[id];
           setConnectedMemberId(id);
@@ -605,24 +634,22 @@ const App = () => {
           if (userData.profilePicture) localStorage.setItem('linkedin_avatar', userData.profilePicture);
           if (userData.name) localStorage.setItem('linkedin_name', userData.name);
 
-          showNotification('Connected to LinkedIn successfully!');
+          showNotification(`Connected as ${userData.name || 'User'}!`);
+
+          // Close explicitly just in case
           try { oauthWindow && oauthWindow.close(); } catch (e) { }
         } else if (Date.now() - start > timeout) {
           clearInterval(poll);
+          window.removeEventListener('message', handleMessage);
+          showNotification('Connection timed out. Please try again.');
           try { oauthWindow && oauthWindow.close(); } catch (e) { }
-          // Fallback: Set a demo member ID for testing
-          const demoMemberId = 'demo_user_' + Math.random().toString(36).slice(2, 11);
-          setConnectedMemberId(demoMemberId);
-          setIsConnected(true);
-          localStorage.setItem('linkedin_connected', 'true');
-          localStorage.setItem('linkedin_member_id', demoMemberId);
-          showNotification('Using demo mode - posts will be in test mode');
         }
       } catch (e) {
-        // ignore transient errors
+        console.error('Polling error:', e);
       }
-    }, 1000);
+    }, 2000); // Poll every 2 seconds
   };
+
 
   return (
     <div className="app-container">
