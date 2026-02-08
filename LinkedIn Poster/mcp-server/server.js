@@ -41,13 +41,14 @@ const CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
 const CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
 let REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI;
 
-// Auto-correct REDIRECT_URI if on Render but set to localhost
+// Force REDIRECT_URI to match actual Render deployment URL if running on Render
 const renderUrl = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_API_URL;
-if (renderUrl && (!REDIRECT_URI || REDIRECT_URI.includes('localhost'))) {
-  REDIRECT_URI = `${renderUrl.replace(/\/$/, '')}/auth/linkedin/callback`;
-  console.log('🔄 Auto-corrected REDIRECT_URI for Render:', REDIRECT_URI);
-} else {
-  console.log('📡 Using configured REDIRECT_URI:', REDIRECT_URI);
+if (renderUrl) {
+  const cleanRenderUrl = renderUrl.replace(/\/$/, '');
+  REDIRECT_URI = `${cleanRenderUrl}/auth/linkedin/callback`;
+  console.log('🚀 Fixed REDIRECT_URI for Render:', REDIRECT_URI);
+} else if (!REDIRECT_URI) {
+  console.log('📡 Using default REDIRECT_URI:', REDIRECT_URI);
 }
 
 // Initialize OpenAI
