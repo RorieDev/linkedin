@@ -9,6 +9,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
+      workbox: {
+        // Don't intercept API routes - let them go to the server
+        navigateFallbackDenylist: [/^\/auth/, /^\/api/, /^\/debug/, /^\/tokens/, /^\/generate/, /^\/post/, /^\/schedule/]
+      },
       manifest: {
         name: 'LinkedIn Poster',
         short_name: 'LinkPoster',
