@@ -3,14 +3,14 @@
 :root {
   --primary: #e11d48;
   --primary-hover: #be123c;
-  --bg-dark: #e11d48;
-  --card-bg: transparent;
-  --card-border: transparent;
+  --bg-dark: #09090b;
+  --card-bg: #18181b;
+  --card-border: #27272a;
   --text-main: #ffffff;
-  --text-muted: #ffffff;
-  --glass: transparent;
-  --glass-border: transparent;
-  --accent: #22c55e;
+  --text-muted: #a1a1aa;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --accent: #10b981;
   --sidebar-width: 280px;
   --header-height: 70px;
   --radius: 12px;

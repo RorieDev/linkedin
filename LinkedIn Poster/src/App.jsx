@@ -834,25 +834,16 @@ const App = () => {
           <div className="header-titles top-bar-titles flex flex-col items-center justify-center gap-2">
 
             <div
-              className="user-profile header pointer"
+              className={`user-profile header pointer ${isConnected ? 'connected' : ''}`}
               onClick={toggleConnection}
               title={isConnected ? "Click to disconnect" : "Click to connect LinkedIn"}
-              style={{
-                backgroundColor: isConnected ? '#22c55e' : '#666666',
-                border: '1px solid transparent',
-                margin: '0 auto',
-                borderRadius: '50px',
-                padding: '4px 16px',
-                pointerEvents: 'auto',
-                cursor: 'pointer'
-              }}
             >
-              <div className="avatar" style={{ width: 28, height: 28, fontSize: 12, border: '2px solid black' }}>
+              <div className="avatar">
                 {isConnected ? 'RD' : '?'}
               </div>
               <div className="user-info">
-                <p className="user-name" style={{ fontSize: 13, color: 'white' }}>{isConnected ? 'Rorie Devine' : 'Guest'}</p>
-                <p className="user-status" style={{ fontSize: 10, color: 'white' }}>
+                <p className="user-name">{isConnected ? 'Rorie Devine' : 'Guest'}</p>
+                <p className="user-status">
                   {isConnected ? 'LINKEDIN CONNECTED' : 'NOT CONNECTED'}
                 </p>
               </div>
@@ -1233,7 +1224,38 @@ const App = () => {
           gap: 12px;
           padding: 8px 12px;
           border-radius: 12px;
-          transition: background 0.2s;
+          padding: 8px 12px;
+          border-radius: 12px;
+          transition: all 0.2s;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .user-profile.header {
+          padding: 6px 16px 6px 6px;
+          border-radius: 50px;
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          margin: 0 auto;
+        }
+
+        .user-profile.header.connected {
+          border-color: var(--accent);
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        .user-profile.header .avatar {
+          width: 32px;
+          height: 32px;
+          font-size: 13px;
+          background: var(--bg-dark);
+          color: white;
+          border: 2px solid var(--card-border);
+        }
+
+        .user-profile.header.connected .avatar {
+           border-color: var(--accent);
+           background: var(--accent);
         }
 
         .user-profile.pointer {
@@ -1394,9 +1416,89 @@ const App = () => {
         .topic-input { min-height: 70px; }
         .content-textarea { min-height: 300px; }
 
+        .history-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 20px;
+        }
+
+        .history-item {
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          border-radius: 12px;
+          overflow: hidden;
+          transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .history-item:hover {
+          border-color: rgba(255,255,255,0.2);
+          transform: translateY(-1px);
+        }
+
+        .history-content {
+          padding: 16px;
+        }
+
+        .history-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--card-border);
+        }
+
+        .history-date {
+          font-size: 13px;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
+
+        .history-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        }
+
+        .btn-icon {
+          background: transparent;
+          color: var(--text-muted);
+          padding: 6px;
+          border-radius: 6px;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-icon:hover {
+          background: rgba(255,255,255,0.1);
+          color: white;
+        }
+
+        .placeholder-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 20px;
+          color: var(--text-muted);
+          text-align: center;
+          background: var(--card-bg);
+          border-radius: 16px;
+          border: 1px dashed var(--card-border);
+        }
+
+        .placeholder-content h3 {
+          color: white;
+          margin: 10px 0 5px;
+          font-size: 18px;
+        }
+
         /* Buttons */
         .btn-primary {
-          background: #0A66C2;
+          background: var(--primary);
           color: white;
           padding: 10px 20px;
           border-radius: 10px;
@@ -1409,7 +1511,7 @@ const App = () => {
         }
 
         .btn-primary:hover:not(:disabled) {
-          background: #004182;
+          background: var(--primary-hover);
           transform: translateY(-1px);
         }
 
@@ -1436,7 +1538,7 @@ const App = () => {
         }
 
         .btn-generate {
-          background: linear-gradient(135deg, #0A66C2 0%, #0077B5 100%) !important;
+          background: linear-gradient(135deg, var(--primary) 0%, #be123c 100%) !important;
           color: white !important;
           padding: 12px 24px;
           border-radius: 12px;
@@ -1444,7 +1546,7 @@ const App = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+          box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
           transition: all 0.3s ease;
           width: auto;
           min-width: 200px;
@@ -1789,8 +1891,8 @@ const App = () => {
         }
 
         .status-badge.scheduled {
-          background: rgba(10, 102, 194, 0.2);
-          color: #0A66C2;
+          background: rgba(59, 130, 246, 0.15);
+          color: #60a5fa;
         }
 
         .status-badge.published {
