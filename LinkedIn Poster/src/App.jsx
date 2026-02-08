@@ -634,19 +634,10 @@ const App = () => {
         {isScheduleModalOpen && (
           <div className="modal-overlay" onClick={() => setIsScheduleModalOpen(false)}>
             <motion.div
+              className="schedule-modal"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              style={{
-                background: '#ffffff',
-                width: '100%',
-                maxWidth: '400px',
-                borderRadius: '12px',
-                padding: '32px',
-                color: 'rgba(0,0,0,0.9)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                zIndex: 2001
-              }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="auth-header">

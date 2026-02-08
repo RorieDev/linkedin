@@ -100,3 +100,20 @@ textarea {
   z-index: 2000;
   padding: 20px;
 }
+
+.schedule-modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  padding: 32px;
+  color: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  z-index: 2001;
+}
+
+@media (min-width: 768px) {
+  .schedule-modal {
+    max-width: 600px;
+  }
+}

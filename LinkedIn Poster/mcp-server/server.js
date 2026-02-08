@@ -254,18 +254,35 @@ app.get('/auth/linkedin/callback', async (req, res) => {
     let firstName = '';
     let lastName = '';
 
+    // First try the OIDC userinfo endpoint (preferred for openid scope)
+    try {
+      console.log('Fetching profile from /userinfo endpoint...');
+      const userinfoResp = await axios.get('https://api.linkedin.com/v2/userinfo', {
+        headers: { Authorization: `Bearer ${access_token}` }
+      });
+
+      const userInfo = userinfoResp.data;
+      if (userInfo) {
+        if (!memberId && userInfo.sub) memberId = userInfo.sub;
+        if (userInfo.picture) profilePicture = userInfo.picture;
+        if (userInfo.given_name) firstName = userInfo.given_name;
+        if (userInfo.family_name) lastName = userInfo.family_name;
+        console.log('Fetched userinfo successfully:', { memberId, firstName, hasPicture: !!profilePicture });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch /userinfo:', e.message);
+    }
+
+    // If we still don't have memberId or want to try legacy method as fallback
     if (!memberId) {
       try {
-        const meResp = await axios.get('https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
+        const meResp = await axios.get('https://api.linkedin.com/v2/me', {
           headers: { Authorization: `Bearer ${access_token}` }
         });
         memberId = meResp.data.id;
-        firstName = meResp.data.firstName?.localized?.en_US || Object.values(meResp.data.firstName?.localized || {})[0] || '';
-        lastName = meResp.data.lastName?.localized?.en_US || Object.values(meResp.data.lastName?.localized || {})[0] || '';
-
-        // Extract profile picture
-        const pPic = meResp.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
-        if (pPic) profilePicture = pPic;
+        // Try to get name from legacy if not found
+        if (!firstName) firstName = meResp.data.firstName?.localized?.en_US || Object.values(meResp.data.firstName?.localized || {})[0] || '';
+        if (!lastName) lastName = meResp.data.lastName?.localized?.en_US || Object.values(meResp.data.lastName?.localized || {})[0] || '';
 
         console.log('Fetched memberId from /me endpoint:', memberId);
       } catch (err) {
@@ -274,20 +291,6 @@ app.get('/auth/linkedin/callback', async (req, res) => {
         const crypto = require('crypto');
         memberId = 'li_' + crypto.createHash('sha256').update(access_token).digest('hex').substring(0, 16);
         console.log('Generated fallback memberId:', memberId);
-      }
-    } else {
-      // If we got memberId from ID token, still try to fetch profile for picture
-      try {
-        const meResp = await axios.get('https://api.linkedin.com/v2/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
-          headers: { Authorization: `Bearer ${access_token}` }
-        });
-        firstName = meResp.data.firstName?.localized?.en_US || Object.values(meResp.data.firstName?.localized || {})[0] || '';
-        lastName = meResp.data.lastName?.localized?.en_US || Object.values(meResp.data.lastName?.localized || {})[0] || '';
-        // Extract profile picture
-        const pPic = meResp.data.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
-        if (pPic) profilePicture = pPic;
-      } catch (e) {
-        console.log('Failed to fetch profile details:', e.message);
       }
     }
 
