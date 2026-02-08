@@ -606,9 +606,19 @@ CRITICAL: Write EXACTLY about what they asked. No substitutions.`
     });
 
     const generatedContent = response.choices[0].message.content;
-    console.log('Generated content:', generatedContent.substring(0, 100));
 
-    res.json({ success: true, content: generatedContent });
+    // Add 3 random humorous hashtags
+    const hashtags = [
+      '#TechHumor', '#DeveloperProblems', '#AI', '#SaaS', '#CorporateLife',
+      '#GenerativeAI', '#FutureOfWork', '#AgileMemes', '#DigitalTransformation',
+      '#ProgrammingJokes', '#TechLife', '#PromptEngineering', '#LLM'
+    ];
+    const selectedHashtags = hashtags.sort(() => 0.5 - Math.random()).slice(0, 3).join(' ');
+
+    const finalContent = `${generatedContent}\n\n${selectedHashtags}`;
+    console.log('Generated content:', finalContent.substring(0, 100));
+
+    res.json({ success: true, content: finalContent });
   } catch (err) {
     console.error('OpenAI error:', err?.message);
     res.status(500).json({ error: 'Failed to generate content', details: err?.message });
